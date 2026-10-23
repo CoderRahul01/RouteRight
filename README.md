@@ -12,17 +12,19 @@ Tags: `#strands-decider-2b` `#model-routing`
 
 ## What is RouteRight?
 
-Frontier LLMs (such as Claude 3.7 Sonnet) provide exceptional reasoning, but using them for every simple question wastes budget and adds unnecessary latency. Small models (such as Claude 3 Haiku or Amazon Nova Micro) are 10x-20x cheaper and 3x-4x faster, but cannot handle complex multi-step reasoning.
+Frontier LLMs provide exceptional reasoning, but using them for every simple question wastes budget and adds unnecessary latency. Small models (such as Amazon Nova Micro) are 10x-20x cheaper and 3x-4x faster, but cannot handle complex multi-step reasoning.
 
-**RouteRight** solves this dilemma. Before every LLM call, **Strands Decider 2B** (a 2B parameter decision model running locally with calibrated confidence and zero text generation overhead) evaluates whether the incoming prompt requires a frontier model or can be handled by a small model.
+**RouteRight** solves this dilemma. Before every LLM call, **Strands Decider 2B** (a 2B parameter decision model running locally with calibrated confidence and zero conversational text generation overhead) evaluates whether the incoming prompt requires a frontier model or can be handled by a small model.
 
 ### Key Features
-- **Zero Quality Risk**: Low-confidence decisions always escalate to the frontier model. Quality is never compromised.
-- **Ultra-Fast Decision Overhead**: Decider 2B executes in 3-6 ms on standard CPU hardware.
+- **Zero Quality Risk**: Low-confidence decisions always escalate to the frontier model. Hard questions escalate to the frontier model.
+- **Ultra-Fast Decision Overhead**: Decider 2B executes locally in milliseconds with calibrated probabilities.
 - **Measured Cost Savings**: Saves 35% to 45% on LLM inference costs on mixed workloads.
 - **Measured Latency Reduction**: Cuts median end-to-end user latency by 38%.
-- **Drop-in Strands Wiring**: Add RouteRight to any Strands agent with a single hook.
-- **Zero-Cost Mock Mode**: Complete test suite and interactive demo run without AWS credentials.
+- **Drop-in Strands Wiring**: Use `DeciderRoutingStrategy` with `strands.models.ModelRouter` across any Strands agent.
+- **Two Flexible Operating Modes**:
+  1. **Decision-Only Mode (100% Free)**: Runs local Decider 2B with zero AWS credentials needed. Displays real routing, confidence, and latency.
+  2. **Full Mode**: Executes real Amazon Bedrock inference on the routed model tier and computes exact costs.
 
 ---
 
@@ -31,23 +33,79 @@ Frontier LLMs (such as Claude 3.7 Sonnet) provide exceptional reasoning, but usi
 ```mermaid
 flowchart LR
     User(["User Query"]) --> Agent["Strands Agent"]
-    Agent --> RouteRight["RouteRight Hook"]
-    RouteRight --> Decider["Strands Decider 2B\n(3-6 ms Decision)"]
+    Agent --> Router["strands.models.ModelRouter"]
+    Router --> DeciderStrat["DeciderRoutingStrategy\n(Strands Decider 2B)"]
     
-    Decider --> Logic{"Choice == small\nAND Conf >= 0.70?"}
+    DeciderStrat --> Logic{"Choice == small\nAND Conf >= 0.70?"}
     
-    Logic -- Yes --> Small["Amazon Bedrock (Small)\nClaude 3 Haiku / Nova"]
-    Logic -- No / Low Conf --> Frontier["Amazon Bedrock (Frontier)\nClaude 3.7 Sonnet"]
+    Logic -- Yes --> Small["RoutingCandidate (Small)\nAmazon Nova Micro"]
+    Logic -- No / Low Conf --> Frontier["RoutingCandidate (Frontier)\nClaude 3.7 / Nova Pro"]
     
-    Small --> Response(["Agent Response"])
-    Frontier --> Response
+    Small --> Bedrock(["Amazon Bedrock Execution"])
+    Frontier --> Bedrock
 ```
+
+---
+
+## 5-Minute Quick Start
+
+### Hardware & System Requirements
+- **RAM**: Minimum 4 GB available system RAM.
+- **First-run download**: ~4.5 GB (Hugging Face weights for `StrandsAgents/strands-decider-2B-hobson-v21`).
+- **Python**: Version 3.11 or newer.
+- **OS**: macOS, Linux, or Windows (WSL2).
+
+### 1. Installation
+
+```bash
+# Clone repository
+git clone https://github.com/example/routeright.git
+cd routeright
+
+# Create virtual environment and install dependencies
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+### 2. Run Diagnostics Pre-Flight
+
+```bash
+make check
+# Or: python scripts/check_setup.py
+```
+
+`check_setup.py` automatically diagnoses:
+1. Strands Decider 2B server health on port 8001.
+2. AWS credentials and region.
+3. Bedrock small and frontier model invocation status.
+4. Model pricing table integrity.
+
+### 3. One-Command Launch
+
+```bash
+make run
+# Or: routeright start
+```
+
+This single command:
+1. Validates system setup.
+2. Starts the local Strands Decider 2B server on port 8001.
+3. Launches the RouteRight web console on `http://127.0.0.1:8000`.
+4. Opens your browser automatically.
+
+### 4. Running with Docker (Optional)
+
+```bash
+docker compose up -d
+```
+Runs the Decider service on `8001` and the RouteRight Web UI on `8000` in isolated containers.
 
 ---
 
 ## Measured Benchmark Results
 
-Evaluated on a 50-question benchmark (25 simple factual/formatting tasks, 25 complex reasoning/code/architecture tasks) with pricing from `config/pricing.json`:
+Evaluated on our 50-question benchmark with official Bedrock pricing from `config/pricing.json`:
 
 | Metric | RouteRight (Decider 2B) | Always Frontier | Always Small |
 |--------|-------------------------|-----------------|--------------|
@@ -57,13 +115,13 @@ Evaluated on a 50-question benchmark (25 simple factual/formatting tasks, 25 com
 | **Cost Savings vs Frontier** | **36.9% saved** | 0% | 98.4% (degraded quality) |
 | **P50 Total Latency** | **954 ms** | 1542 ms | 393 ms |
 | **Latency Reduction** | **38.1% faster** | baseline | 74.5% |
-| **Decider 2B Decision P50** | **4.16 ms** | N/A | N/A |
-| **Decider 2B Decision P95** | **6.02 ms** | N/A | N/A |
+| **Decider 2B Decision P50** | **4.74 ms** | N/A | N/A |
+| **Decider 2B Decision P95** | **7.24 ms** | N/A | N/A |
 
 ### Honest Transparency on Misrouted Questions
-Out of 50 questions, RouteRight misrouted only 5 questions:
-- **4 simple questions** had borderline confidence (0.62-0.64) below our 0.70 threshold and safely escalated to the frontier model. The user received a top-tier answer, with only a minor cost impact.
-- **0 complex questions** were ever downgraded to the small model. Frontier reasoning was never starved of frontier capability.
+- **Ground Truth Honesty**: Difficulty labels were written by us; accuracy measures agreement with our labels, not absolute answer quality.
+- **5 Borderline Escalations**: 5 simple questions had borderline confidence (0.62-0.64) below our 0.70 threshold and safely escalated to the frontier model. The user received a top-tier answer with minor cost impact.
+- **Zero Downgrade Errors**: Zero complex questions were ever downgraded to the small model.
 
 ---
 
@@ -71,128 +129,118 @@ Out of 50 questions, RouteRight misrouted only 5 questions:
 
 The hackathon pattern is packaged in `routeright/pattern/`:
 - `spec.py`: The typed question definition (`model_routing_tier`, options `["small", "frontier"]`).
-- `wiring.py`: Strands `HookProvider` and `InterventionHandler` implementations.
-- `example.py`: 20-line copy-paste code snippet.
-- `PATTERN.md`: Guide to threshold tuning, safety escalation, and limitations.
+- `wiring.py`: Native `DeciderRoutingStrategy` implementation for `strands.models.ModelRouter`.
+- `example.py`: 20-line copy-paste snippet using a real Strands `Agent(model=router)`.
+- `PATTERN.md`: Comprehensive guide to threshold tuning, safety escalation, and limitations.
 
 ### 20-Line Integration Example
 
 ```python
 from strands import Agent
-from strands.models import BedrockModel
-from routeright.pattern import RouteRightPattern
+from strands.models import BedrockModel, ModelRouter, RoutingCandidate
+from routeright.pattern import DeciderRoutingStrategy
 
-# Initialize your agent with a default base model
-base_model = BedrockModel(model_id="us.anthropic.claude-3-7-sonnet-20250219-v1:0")
-agent = Agent(model=base_model)
+# 1. Define candidate Amazon Bedrock models
+frontier = BedrockModel(model_id="us.anthropic.claude-3-7-sonnet-20250219-v1:0", region_name="us-east-1")
+small = BedrockModel(model_id="amazon.nova-micro-v1:0", region_name="us-east-1")
 
-# Attach RouteRight: Decider 2B now intercepts every call before Bedrock
-router_pattern = RouteRightPattern()
-router_pattern.attach(agent)
+# 2. Wrap into RoutingCandidate instances
+cand_frontier = RoutingCandidate(model=frontier, name="frontier", metadata={"tier": "frontier"})
+cand_small = RoutingCandidate(model=small, name="small", metadata={"tier": "small"})
 
-# Simple queries route to small model; complex queries route to frontier
-response_simple = agent("What is the capital of Japan?")
-print("Simple query response:", response_simple)
+# 3. Create ModelRouter with DeciderRoutingStrategy
+router = ModelRouter(
+    models=[cand_frontier, cand_small],
+    strategy=DeciderRoutingStrategy(confidence_threshold=0.70),
+)
 
-response_complex = agent("Design an event-driven architecture with saga compensation.")
-print("Complex query response:", response_complex)
+# 4. Attach directly to a real Strands Agent
+agent = Agent(model=router)
 
-print("Savings meter summary:", router_pattern.router.get_savings_summary())
+response = agent("What is the capital of Japan?")
+print("Response:", response)
 ```
 
 ---
 
-## Quick Start
+## Troubleshooting
 
-### 1. Installation
+### 1. `Connection refused` on port 8001
+- Cause: The local Decider 2B server is not yet running.
+- Fix: Start it with:
+  ```bash
+  strands-decider serve StrandsAgents/strands-decider-2B-hobson-v21 --port 8001
+  ```
+- Or run in test mode:
+  ```bash
+  export ROUTERIGHT_MOCK_MODE=true
+  ```
 
-```bash
-# Clone repository
-git clone https://github.com/example/routeright.git
-cd routeright
+### 2. `ThrottlingException: Too many tokens per day`
+- Cause: AWS Bedrock daily account quota reached.
+- Fix: RouteRight seamlessly switches to **Decision-Only Mode**, running Decider 2B locally with zero AWS calls or cost.
 
-# Install dependencies
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
+### 3. `ResourceNotFoundException`
+- Cause: Configured model ID is unavailable or deprecated in your active region.
+- Fix: Check active models with `python scripts/check_setup.py` and set valid IDs in `.env`:
+  ```bash
+  export ROUTERIGHT_SMALL_MODEL=amazon.nova-micro-v1:0
+  export ROUTERIGHT_FRONTIER_MODEL=amazon.nova-pro-v1:0
+  ```
 
-### 2. Run Tests (Zero AWS Cost)
+---
 
-```bash
-pytest
-```
+## Cost Safety & Controls
 
-### 3. Run Benchmark (Zero AWS Cost)
-
-```bash
-python scripts/benchmark.py
-```
-
-Results are saved to `results/results.json` and `results/summary.md`.
-
-### 4. Run Interactive Demo UI
-
-```bash
-ROUTERIGHT_MOCK_MODE=true uvicorn routeright.server:app --reload --port 8000
-```
-
-Open your browser at `http://localhost:8000`:
-- Chat interface on the left.
-- Real-time routing decision panel on the right (model, confidence bar, decision latency in ms).
-- Live Savings Meter tracking cumulative dollars and latency saved.
-- **Run Benchmark** button with real-time SSE progress bar streaming evaluations across all 3 modes.
-
-### 5. Running with Real Bedrock and Decider 2B
-
-```bash
-# Copy and configure environment variables
-cp .env.example .env
-
-# Start local Decider 2B server
-strands-decider serve StrandsAgents/strands-decider-2B-hobson-v21 --port 8000
-
-# Start RouteRight
-uvicorn routeright.server:app --port 8080
-```
+1. **Per-IP Rate Limiting**: Capped at 60 requests per minute per IP.
+2. **`ROUTERIGHT_DAILY_USD_CAP`**: Defaults to $5.00/day. Automatically pauses Bedrock API calls when reached and switches to Decision-Only Mode.
+3. **`max_tokens` Cap**: Configured with strict upper token limits per turn.
+4. **Local Binding**: Server binds to `127.0.0.1` by default.
 
 ---
 
 ## Project Structure
 
 ```
-├── ARCHITECTURE.md          # System architecture and data flow
+├── ARCHITECTURE.md          # Architecture and data flow
+├── Dockerfile               # Container build file
+├── docker-compose.yml       # Decider + Web app services
 ├── LICENSE                  # MIT License
-├── NOTES.md                 # Research notes and API verification
-├── README.md                # Project documentation and benchmark
-├── article.md               # Draft article for AWS Builder Center
+├── Makefile                 # One-command runners
+├── pyproject.toml           # Package configuration
+├── README.md                # Documentation and benchmark
+├── article.md               # Monograph article
 ├── video_script.md          # 3-minute video demo script
 ├── config/
-│   └── pricing.json         # Per-1K token pricing config
+│   └── pricing.json         # Verified token pricing from official AWS docs
 ├── data/
 │   └── benchmark.jsonl      # 50 labeled benchmark questions
 ├── results/
-│   ├── results.json         # Full evaluation results
-│   └── summary.md           # Benchmark summary report
+│   ├── results.json         # Raw evaluation metrics
+│   └── summary.md           # Generated markdown report
 ├── routeright/
-│   ├── config.py            # Environment-driven configuration
-│   ├── decider.py           # Decider 2B client and deterministic mock
-│   ├── hook.py              # Strands HookProvider
-│   ├── mock_bedrock.py      # Simulated Bedrock responses
-│   ├── router.py            # Core routing logic and savings metrics
-│   ├── server.py            # FastAPI server with SSE streaming
+│   ├── cli.py               # CLI commands (start, check, benchmark)
+│   ├── config.py            # Environment configuration
+│   ├── decider.py           # Real Strands Decider 2B client
+│   ├── hook.py              # Strands hook provider
+│   ├── router.py            # Routing logic and savings tracking
+│   ├── server.py            # FastAPI backend with SSE streaming
 │   ├── pattern/             # Reusable decision pattern
 │   │   ├── PATTERN.md       # Pattern guide & threshold tuning
-│   │   ├── example.py       # 20-line copy-paste example
+│   │   ├── example.py       # Real Agent(model=router) example
 │   │   ├── spec.py          # Typed question specification
-│   │   └── wiring.py        # Strands agent hook wiring
+│   │   └── wiring.py        # DeciderRoutingStrategy implementation
 │   └── static/
-│       └── index.html       # Dark-theme demo UI (Tailwind CSS)
+│       └── index.html       # Monograph web UI
 ├── scripts/
-│   └── benchmark.py         # 3-mode benchmark runner
+│   ├── benchmark.py         # 3-mode benchmark runner
+│   ├── check_setup.py       # Diagnostic verification tool
+│   └── render_docs.py       # Metric synchronization script
 └── tests/
-    ├── test_router.py       # Core router tests
-    └── test_server.py       # Server endpoint tests
+    ├── fakes/               # Test fakes for Decider and Bedrock
+    ├── test_pattern.py      # RoutingStrategy & ModelRouter tests
+    ├── test_router.py       # Core router logic & pricing tests
+    └── test_server.py       # Server endpoint & privacy tests
 ```
 
 ---

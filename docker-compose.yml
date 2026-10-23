@@ -1,0 +1,29 @@
+services:
+  decider:
+    build: .
+    command: strands-decider serve StrandsAgents/strands-decider-2B-hobson-v21 --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
+    volumes:
+      - hf-cache:/root/.cache/huggingface
+    restart: unless-stopped
+
+  web:
+    build: .
+    command: python -m routeright.cli start --no-browser
+    environment:
+      - ROUTERIGHT_HOST=0.0.0.0
+      - ROUTERIGHT_PORT=8000
+      - ROUTERIGHT_DECIDER_URL=http://decider:8001
+      - ROUTERIGHT_CONFIDENCE_THRESHOLD=0.70
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - decider
+    restart: unless-stopped
+
+volumes:
+  hf-cache:

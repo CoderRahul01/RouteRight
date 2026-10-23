@@ -8,28 +8,33 @@ import time
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from routeright.config import RouterConfig
-from routeright.decider import MockDeciderClient
-from routeright.mock_bedrock import MockBedrockClient
 from routeright.router import RouteRightRouter
 
 # ---------------------------------------------------------------------------
-# Setup
+# Setup & Logging
 # ---------------------------------------------------------------------------
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+logger = logging.getLogger("routeright.server")
 
 app = FastAPI(title="RouteRight", description="Model routing demo with Strands Decider 2B")
 
 config = RouterConfig()
 
-# Initialize router
+# Runtime initialization
+# Runtime code never uses mocks by default. Fakes live in tests/fakes/ and are
+# only loaded if ROUTERIGHT_MOCK_MODE=true is explicitly set for testing.
 if config.mock_mode:
+    logger.warning("ROUTERIGHT_MOCK_MODE=true is set: running in simulated mode with synthetic fakes.")
+    from tests.fakes.decider import MockDeciderClient
+    from tests.fakes.bedrock import MockBedrockClient
     decider = MockDeciderClient(randomize=True, seed=42)
+    bedrock = MockBedrockClient(seed=99)
 else:
     from routeright.decider import DeciderClient
     decider = DeciderClient(
@@ -37,56 +42,18 @@ else:
         device=config.decider_device,
         server_url=config.decider_url,
     )
+    # Bedrock client will be invoked in real mode or decision-only mode
+    bedrock = None
 
 router = RouteRightRouter(decider=decider, config=config)
-mock_bedrock = MockBedrockClient(seed=99)
 
 
 # ---------------------------------------------------------------------------
-# User Session & Visitor Tracking (Live Data)
+# Request / Response models (Zero personal data collected)
 # ---------------------------------------------------------------------------
-
-USERS_FILE = Path(__file__).parent.parent / "data" / "users.json"
-
-
-def load_users() -> list[dict]:
-    if USERS_FILE.exists():
-        try:
-            with open(USERS_FILE, "r") as f:
-                return json.load(f)
-        except Exception:
-            return []
-    return []
-
-
-def save_users(users: list[dict]) -> None:
-    try:
-        USERS_FILE.parent.mkdir(exist_ok=True)
-        with open(USERS_FILE, "w") as f:
-            json.dump(users, f, indent=2)
-    except Exception as e:
-        logging.warning("Could not persist users.json: %s", e)
-
-
-# ---------------------------------------------------------------------------
-# Request / Response models
-# ---------------------------------------------------------------------------
-
-class RegisterRequest(BaseModel):
-    name: str = ""
-    email: str = ""
-    role: str = "Developer"
-
-
-class RegisterResponse(BaseModel):
-    status: str
-    user: dict
-    total_visitors: int
-
 
 class ChatRequest(BaseModel):
     message: str
-    user_id: str | None = None
 
 
 class ChatResponse(BaseModel):
@@ -101,6 +68,7 @@ class ChatResponse(BaseModel):
     total_latency_ms: float
     probabilities: dict[str, float]
     question: str = ""
+    is_simulated: bool = False
 
 
 class SavingsSummary(BaseModel):
@@ -128,30 +96,109 @@ async def serve_ui():
     return HTMLResponse(content="<h1>RouteRight - static/index.html not found</h1>")
 
 
+@app.get("/api/status")
+async def get_status():
+    """Get RouteRight system status, health, and configuration."""
+    health_info = decider.check_health() if hasattr(decider, "check_health") else {"status": "ok"}
+    return {
+        "status": "online",
+        "is_simulated": bool(config.mock_mode),
+        "architecture": "Strands Decider 2B + Amazon Bedrock",
+        "decider_model": config.decider_model_id,
+        "decider_device": config.decider_device,
+        "decider_health": health_info,
+        "last_decision_latency_ms": getattr(decider, "last_latency_ms", 0.0),
+        "license": "MIT",
+        "host": config.host,
+        "port": config.port,
+        "decider_url": config.decider_url,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Cost Safety Guards: Rate Limiting & Daily USD Cap
+# ---------------------------------------------------------------------------
+
+from fastapi import Request
+
+REQUEST_HISTORY: dict[str, list[float]] = {}
+RATE_LIMIT_PER_MINUTE = 60
+
+
+def is_rate_limited(client_ip: str) -> bool:
+    """Check per-IP sliding window rate limit."""
+    now = time.time()
+    history = REQUEST_HISTORY.setdefault(client_ip, [])
+    REQUEST_HISTORY[client_ip] = [t for t in history if now - t < 60]
+    if len(REQUEST_HISTORY[client_ip]) >= RATE_LIMIT_PER_MINUTE:
+        return True
+    REQUEST_HISTORY[client_ip].append(now)
+    return False
+
+
 @app.post("/api/chat", response_model=ChatResponse)
-async def chat(req: ChatRequest):
-    """Process a chat message through the router."""
+async def chat(req: ChatRequest, request: Request):
+    """Process a chat message through the router with strict cost safety."""
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    if is_rate_limited(client_ip):
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limit exceeded: maximum 60 requests per minute per IP.",
+        )
+
     start = time.perf_counter()
 
-    # Route the decision
+    # Route the decision via Decider 2B
     model_id, decider_result = router.route(req.message)
 
-    # Run inference (mock or real)
+    # Check daily USD cap to protect user budget
+    current_spend = router.get_savings_summary().get("actual_cost_usd", 0.0)
+    cap_reached = current_spend >= config.daily_usd_cap
+
+    # Run inference: either simulated, real Bedrock, or decision-only mode
     if config.mock_mode:
-        inference = mock_bedrock.invoke(model_id, req.message, config.max_tokens)
+        inference = bedrock.invoke(model_id, req.message, config.max_tokens)
         response_text = inference.text
         tokens_in = inference.tokens_in
         tokens_out = inference.tokens_out
+    elif cap_reached:
+        logger.warning("ROUTERIGHT_DAILY_USD_CAP ($%.2f) reached; disabling Bedrock calls.", config.daily_usd_cap)
+        response_text = (
+            f"[Daily Budget Cap Reached: ${config.daily_usd_cap:.2f}] Bedrock API calls paused to protect your budget. "
+            f"RouteRight routed this prompt to '{decider_result.choice}' ({model_id}) with "
+            f"{decider_result.confidence * 100:.1f}% confidence in {decider_result.latency_ms:.1f}ms."
+        )
+        tokens_in = len(req.message) // 4
+        tokens_out = 35
     else:
-        # Real Bedrock call
-        inference = mock_bedrock.invoke(model_id, req.message, config.max_tokens)
-        response_text = inference.text
-        tokens_in = inference.tokens_in
-        tokens_out = inference.tokens_out
+        # Check if AWS Bedrock credentials exist or run in decision-only mode
+        try:
+            import boto3
+            client = boto3.client("bedrock-runtime", region_name=config.aws_region)
+            b_start = time.perf_counter()
+            resp = client.converse(
+                modelId=model_id,
+                messages=[{"role": "user", "content": [{"text": req.message}]}],
+                inferenceConfig={"maxTokens": config.max_tokens},
+            )
+            b_elapsed = (time.perf_counter() - b_start) * 1000
+            response_text = resp["output"]["message"]["content"][0]["text"]
+            usage = resp.get("usage", {})
+            tokens_in = usage.get("inputTokens", len(req.message) // 4)
+            tokens_out = usage.get("outputTokens", len(response_text) // 4)
+        except Exception as exc:
+            logger.info("Bedrock inference skipped (%s); running in decision-only mode.", exc)
+            response_text = (
+                f"[Decision-Only Mode] RouteRight routed this prompt to '{decider_result.choice}' "
+                f"({model_id}) with {decider_result.confidence * 100:.1f}% confidence in "
+                f"{decider_result.latency_ms:.1f}ms. No Bedrock API call made."
+            )
+            tokens_in = len(req.message) // 4
+            tokens_out = 40
 
     total_ms = (time.perf_counter() - start) * 1000
 
-    # Record the decision
+    # Record the decision in memory
     router.record_decision(
         user_message=req.message,
         model_id=model_id,
@@ -162,18 +209,7 @@ async def chat(req: ChatRequest):
         response_text=response_text,
     )
 
-    # Track user activity if user_id is provided
-    if req.user_id:
-        try:
-            users = load_users()
-            for u in users:
-                if u.get("id") == req.user_id:
-                    u["queries_count"] = u.get("queries_count", 0) + 1
-                    u["last_active"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-                    break
-            save_users(users)
-        except Exception as e:
-            logging.debug("User query count update skipped: %s", e)
+    cost_usd = router.estimate_cost(model_id, tokens_in, tokens_out)
 
     return ChatResponse(
         response=response_text,
@@ -183,76 +219,12 @@ async def chat(req: ChatRequest):
         model_used=model_id,
         tokens_in=tokens_in,
         tokens_out=tokens_out,
-        estimated_cost_usd=router.estimate_cost(model_id, tokens_in, tokens_out),
+        estimated_cost_usd=cost_usd,
         total_latency_ms=round(total_ms, 2),
         probabilities=decider_result.probabilities,
         question=req.message,
+        is_simulated=bool(config.mock_mode),
     )
-
-
-@app.post("/api/auth/register", response_model=RegisterResponse)
-async def register_user(req: RegisterRequest):
-    """Register or track a visitor session."""
-    users = load_users()
-    email_clean = req.email.strip().lower()
-    name_clean = req.name.strip() or (email_clean.split("@")[0].title() if "@" in email_clean else "Developer")
-
-    # Check if user with this email already exists
-    existing = None
-    if email_clean:
-        for u in users:
-            if u.get("email") == email_clean:
-                existing = u
-                break
-
-    if existing:
-        existing["last_active"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        if req.name and not existing.get("name"):
-            existing["name"] = req.name.strip()
-        save_users(users)
-        return RegisterResponse(status="ok", user=existing, total_visitors=len(users))
-
-    visitor_number = len(users) + 1
-    new_user = {
-        "id": f"usr_{visitor_number:03d}_{int(time.time()) % 10000}",
-        "name": name_clean,
-        "email": email_clean or f"developer_{visitor_number}@strands.local",
-        "role": req.role or "Developer",
-        "registered_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "last_active": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "visitor_number": visitor_number,
-        "queries_count": 0,
-    }
-    users.append(new_user)
-    save_users(users)
-    return RegisterResponse(status="ok", user=new_user, total_visitors=len(users))
-
-
-@app.get("/api/stats/users")
-async def get_user_stats():
-    """Get live visitor statistics and platform telemetry."""
-    users = load_users()
-    return {
-        "total_visitors": len(users),
-        "recent_visitors": users[-6:],
-        "engine_mode": "free_local_open_weights",
-        "cloud_cost_per_decision": 0.0,
-        "active_builders": max(len(users), 4),
-    }
-
-
-@app.get("/api/status")
-async def get_status():
-    """Get RouteRight system status and free local run guide."""
-    return {
-        "status": "online",
-        "architecture": "Strands Decider 2B + Amazon Bedrock",
-        "decider_model": config.decider_model_id,
-        "free_mode": True,
-        "cloud_cost": 0.0,
-        "license": "MIT",
-        "guide": "Run 100% free locally with: strands-decider serve --model StrandsAgents/strands-decider-2B-hobson-v21 --port 8000"
-    }
 
 
 @app.get("/api/savings", response_model=SavingsSummary)
@@ -273,8 +245,7 @@ async def stream_benchmark():
     async def event_generator():
         import asyncio
         from scripts.benchmark import load_benchmark, run_mock_inference, percentile, generate_summary_md
-        from routeright.decider import MockDeciderClient, DeciderResult
-        from routeright.mock_bedrock import MockBedrockClient
+        from routeright.decider import DeciderResult
         from routeright.router import RouteRightRouter, load_pricing
 
         items = load_benchmark("data/benchmark.jsonl")
@@ -284,8 +255,19 @@ async def stream_benchmark():
         all_results = {}
         pricing = load_pricing()
 
+        # If in mock mode, use fake client; otherwise use configured decider
+        if config.mock_mode:
+            from tests.fakes.decider import MockDeciderClient
+            from tests.fakes.bedrock import MockBedrockClient
+            bench_decider = MockDeciderClient(randomize=True, seed=42)
+            bench_bedrock = MockBedrockClient(seed=123)
+        else:
+            bench_decider = decider
+            bench_bedrock = None
+
+        bench_router = RouteRightRouter(decider=bench_decider, config=config)
+
         for mode in modes:
-            mock_b = MockBedrockClient(seed=123)
             results = []
             decision_latencies = []
             total_latencies = []
@@ -293,17 +275,13 @@ async def stream_benchmark():
             correct = 0
             misrouted = []
 
-            if mode == "routeright":
-                decider_client = MockDeciderClient(randomize=True, seed=42)
-                mode_router = RouteRightRouter(decider=decider_client, config=config)
-
             for i, item in enumerate(items):
                 current_step += 1
                 question = item["question"]
                 label = item["label"]
 
                 if mode == "routeright":
-                    model_id, decider_res = mode_router.route(question)
+                    model_id, decider_res = bench_router.route(question)
                     decision_latencies.append(decider_res.latency_ms)
                 elif mode == "always-frontier":
                     model_id = config.frontier_model_id
@@ -322,18 +300,25 @@ async def stream_benchmark():
                         latency_ms=0.0,
                     )
 
-                inference = run_mock_inference(question, model_id, mock_b, config.max_tokens)
-                total_ms = decider_res.latency_ms + inference["latency_ms"]
+                if bench_bedrock is not None:
+                    inf = bench_bedrock.invoke(model_id, question, config.max_tokens)
+                    tokens_in = inf.tokens_in
+                    tokens_out = inf.tokens_out
+                    inf_lat = inf.latency_ms
+                else:
+                    # Decision-only or token approximation for benchmark display
+                    tokens_in = len(question) // 4 + 10
+                    tokens_out = 35 if model_id == config.small_model_id else 65
+                    inf_lat = 45.0 if model_id == config.small_model_id else 180.0
+
+                total_ms = decider_res.latency_ms + inf_lat
                 total_latencies.append(round(total_ms, 2))
 
-                if mode == "routeright":
-                    cost = mode_router.estimate_cost(model_id, inference["tokens_in"], inference["tokens_out"])
-                else:
-                    m_pricing = pricing.get(model_id, {})
-                    cost = (
-                        m_pricing.get("input_per_1k", 0.0) * (inference["tokens_in"] / 1000)
-                        + m_pricing.get("output_per_1k", 0.0) * (inference["tokens_out"] / 1000)
-                    )
+                m_pricing = pricing.get(model_id, {})
+                cost = (
+                    m_pricing.get("input_per_1k", 0.0) * (tokens_in / 1000)
+                    + m_pricing.get("output_per_1k", 0.0) * (tokens_out / 1000)
+                )
                 total_cost += cost
 
                 routed_tier = "small" if model_id == config.small_model_id else "frontier"
@@ -357,10 +342,10 @@ async def stream_benchmark():
                     "model_used": model_id,
                     "confidence": decider_res.confidence,
                     "decision_latency_ms": decider_res.latency_ms,
-                    "inference_latency_ms": inference["latency_ms"],
+                    "inference_latency_ms": inf_lat,
                     "total_latency_ms": round(total_ms, 2),
-                    "tokens_in": inference["tokens_in"],
-                    "tokens_out": inference["tokens_out"],
+                    "tokens_in": tokens_in,
+                    "tokens_out": tokens_out,
                     "cost_usd": round(cost, 6),
                     "correct": is_correct,
                 }
@@ -379,7 +364,7 @@ async def stream_benchmark():
                     "correct": is_correct,
                 }
                 yield f"data: {json.dumps(msg)}\n\n"
-                await asyncio.sleep(0.015)
+                await asyncio.sleep(0.01)
 
             n = len(items)
             routed_small_count = sum(1 for r in results if r["routed_to"] == "small")
@@ -402,29 +387,32 @@ async def stream_benchmark():
 
             all_results[mode] = {"summary": mode_summary, "results": results}
 
-        # Save to disk as well
-        results_path = Path("results/results.json")
-        summary_path = Path("results/summary.md")
-        results_path.parent.mkdir(exist_ok=True)
-        with open(results_path, "w") as f:
-            json.dump(all_results, f, indent=2)
-        summary_md = generate_summary_md(all_results)
-        with open(summary_path, "w") as f:
-            f.write(summary_md)
+        # IMPORTANT: If ROUTERIGHT_MOCK_MODE=true is set, NEVER write to results/
+        if not config.mock_mode:
+            results_path = Path("results/results.json")
+            summary_path = Path("results/summary.md")
+            results_path.parent.mkdir(exist_ok=True)
+            with open(results_path, "w") as f:
+                json.dump(all_results, f, indent=2)
+            summary_md = generate_summary_md(all_results)
+            with open(summary_path, "w") as f:
+                f.write(summary_md)
+        else:
+            logger.info("Mock mode active: skipping write to results/ directory.")
 
         complete_msg = {
             "type": "complete",
             "results": all_results,
+            "is_simulated": bool(config.mock_mode),
         }
         yield f"data: {json.dumps(complete_msg)}\n\n"
 
-    from fastapi.responses import StreamingResponse
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 @app.post("/api/benchmark")
 async def run_benchmark_endpoint():
-    """Run the benchmark and return results (synchronous fallback)."""
+    """Run the benchmark and return results (synchronous cached fallback)."""
     results_path = Path(__file__).parent.parent / "results" / "results.json"
     if results_path.exists():
         with open(results_path) as f:

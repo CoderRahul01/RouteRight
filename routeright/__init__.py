@@ -2,13 +2,12 @@
 
 from routeright.config import RouterConfig
 from routeright.router import RouteRightRouter
-from routeright.decider import DeciderClient, MockDeciderClient
+from routeright.decider import DeciderClient
 from routeright.hook import RouteRightHook
 
 __all__ = [
     "RouterConfig",
     "RouteRightRouter",
     "DeciderClient",
-    "MockDeciderClient",
     "RouteRightHook",
 ]

@@ -11,8 +11,10 @@ from routeright.pattern.spec import (
     DEFAULT_INSTRUCTIONS,
 )
 from routeright.pattern.wiring import (
+    DeciderRoutingStrategy,
     RouteRightPattern,
     RouteRightInterventionHandler,
+    create_decider_router,
 )
 
 __all__ = [
@@ -20,6 +22,8 @@ __all__ = [
     "ROUTING_OPTIONS",
     "DEFAULT_QUESTION_ID",
     "DEFAULT_INSTRUCTIONS",
+    "DeciderRoutingStrategy",
     "RouteRightPattern",
     "RouteRightInterventionHandler",
+    "create_decider_router",
 ]

@@ -1,16 +1,18 @@
-"""Decider client - wraps Strands Decider 2B for routing decisions.
+"""Decider client - wraps Strands Decider 2B for model routing decisions.
 
-Supports three modes:
-1. Local model (StrandsDeciderModel) - loads weights directly
-2. HTTP server mode - calls a running strands-decider serve instance
-3. Mock mode - deterministic fake responses for testing
+Supports two real execution modes:
+1. HTTP server mode: calls a running `strands-decider serve <model> --port <port>` instance.
+   Official command: strands-decider serve StrandsAgents/strands-decider-2B-hobson-v21 --port 8001
+2. Local in-process mode: loads model directly via `StrandsDeciderModel.load()`.
+
+Never falls back to fake/mock output in runtime code. If unreachable, raises clear
+descriptive error with exact setup instructions.
 """
 
 from __future__ import annotations
 
-import json
 import logging
-import random
+import platform
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -27,17 +29,17 @@ logger = logging.getLogger("routeright.decider")
 
 @dataclass
 class DeciderResult:
-    """Result from a Decider 2B routing decision."""
+    """Result from a Strands Decider 2B routing decision."""
 
-    choice: str                    # "small" or "frontier"
-    confidence: float              # 0.0 - 1.0
+    choice: str                      # "small" or "frontier"
+    confidence: float                # 0.0 - 1.0 (calibrated)
     probabilities: dict[str, float]  # per-option probabilities
-    latency_ms: float              # time taken for the decision
+    latency_ms: float                # real execution time in milliseconds
     raw_response: dict[str, Any] | None = None
 
 
 # ---------------------------------------------------------------------------
-# The typed question we ask Decider 2B
+# The typed question definition for Decider 2B
 # ---------------------------------------------------------------------------
 
 ROUTING_QUESTION_ID = "model_routing"
@@ -45,11 +47,14 @@ ROUTING_QUESTION = {
     "type": "choice",
     "instructions": (
         "Does answering this user request require a frontier-class LLM "
-        "(for multi-step reasoning, code debugging, complex analysis), "
+        "(for multi-step reasoning, code debugging, complex analysis, mathematical proofs), "
         "or can a small efficient model handle it adequately "
-        "(for simple facts, formatting, short rewrites)?"
+        "(for simple facts, formatting, short translations, greetings)?"
     ),
-    "options": ["small", "frontier"],
+    "criteria": {
+        "small": "Simple facts, definitions, lookup, short summaries, translations",
+        "frontier": "Complex multi-step reasoning, algorithm design, system architecture, security debugging",
+    },
 }
 
 
@@ -58,233 +63,171 @@ ROUTING_QUESTION = {
 # ---------------------------------------------------------------------------
 
 class BaseDeciderClient(ABC):
-    """Base class for decider clients."""
+    """Base interface for decider clients."""
 
     @abstractmethod
     def decide(self, user_message: str) -> DeciderResult:
         """Ask Decider 2B whether this message needs a frontier or small model."""
         ...
 
+    @abstractmethod
+    def check_health(self) -> dict[str, Any]:
+        """Health check decider model status, device, and connectivity."""
+        ...
+
 
 # ---------------------------------------------------------------------------
-# Real client - local model
+# Real Decider Client
 # ---------------------------------------------------------------------------
 
 class DeciderClient(BaseDeciderClient):
-    """Calls Strands Decider 2B locally or via HTTP server."""
+    """Real Strands Decider 2B client communicating via HTTP server or in-process."""
 
     def __init__(
         self,
         model_id: str = "StrandsAgents/strands-decider-2B-hobson-v21",
         device: str = "cpu",
-        server_url: str | None = None,
+        server_url: str | None = "http://127.0.0.1:8001",
     ):
-        self._server_url = server_url
-        self._model = None
+        self._server_url = server_url.rstrip("/") if server_url else "http://127.0.0.1:8001"
         self._model_id = model_id
         self._device = device
-
-        if server_url:
-            logger.info("Decider client using HTTP server at %s", server_url)
-        else:
-            logger.info("Loading Decider 2B model locally: %s on %s", model_id, device)
-            self._load_local_model()
-
-    def _load_local_model(self) -> None:
-        """Load the model weights locally using strands_decider."""
-        try:
-            from strands_decider.modeling import StrandsDeciderModel
-            self._model = StrandsDeciderModel.load(self._model_id, device=self._device)
-            logger.info("Decider 2B model loaded successfully")
-        except ImportError:
-            logger.warning(
-                "strands_decider not installed or model load failed. "
-                "Falling back to HTTP server mode. "
-                "Start the server with: strands-decider serve %s",
-                self._model_id,
-            )
-            if not self._server_url:
-                self._server_url = "http://127.0.0.1:8000"
-        except Exception as exc:
-            logger.warning("Failed to load local model: %s. Falling back to HTTP.", exc)
-            if not self._server_url:
-                self._server_url = "http://127.0.0.1:8000"
-
-    def decide(self, user_message: str) -> DeciderResult:
-        """Route the decision through local model or HTTP server."""
-        if self._server_url:
-            return self._decide_http(user_message)
-        return self._decide_local(user_message)
-
-    def _decide_local(self, user_message: str) -> DeciderResult:
-        """Use the locally loaded model."""
-        from strands_decider.schema import ChoiceQuestion
-
-        start = time.perf_counter()
-
-        question = ChoiceQuestion(
-            type="choice",
-            instructions=ROUTING_QUESTION["instructions"],
-            options=ROUTING_QUESTION["options"],
-        )
-
-        # The model evaluates state against questions
-        results = self._model.ask(
-            state=user_message,
-            questions={ROUTING_QUESTION_ID: question},
-        )
-
-        elapsed_ms = (time.perf_counter() - start) * 1000
-
-        answer = results.get(ROUTING_QUESTION_ID, {})
-        choice = getattr(answer, "value", "frontier")
-        confidence = getattr(answer, "confidence", 0.0)
-        probabilities = {}
-        if hasattr(answer, "probabilities"):
-            probabilities = dict(answer.probabilities)
-
-        result = DeciderResult(
-            choice=choice,
-            confidence=confidence,
-            probabilities=probabilities,
-            latency_ms=round(elapsed_ms, 2),
-            raw_response={"answer": str(answer)},
-        )
+        self._local_model = None
+        self.last_latency_ms: float = 0.0
 
         logger.info(
-            "Decider local: choice=%s confidence=%.3f latency=%.1fms",
-            result.choice, result.confidence, result.latency_ms,
+            "DeciderClient configured for model %s (HTTP target: %s, device: %s)",
+            self._model_id, self._server_url, self._device,
         )
-        return result
 
-    def _decide_http(self, user_message: str) -> DeciderResult:
-        """Call the Decider 2B HTTP server."""
-        start = time.perf_counter()
+    def check_health(self) -> dict[str, Any]:
+        """Query the /health endpoint of the running strands-decider server."""
+        if self._server_url:
+            try:
+                with httpx.Client(timeout=2.0) as client:
+                    resp = client.get(f"{self._server_url}/health")
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        data["connected"] = True
+                        data["url"] = self._server_url
+                        data["os"] = platform.system()
+                        return data
+            except Exception as exc:
+                logger.debug("Decider health check probe failed: %s", exc)
 
+        return {
+            "status": "unreachable",
+            "connected": False,
+            "url": self._server_url,
+            "model": self._model_id,
+            "device": self._device,
+            "os": platform.system(),
+            "instructions": (
+                f"Start Decider 2B locally with: "
+                f"strands-decider serve {self._model_id} --port {self._server_url.split(':')[-1]}"
+            ),
+        }
+
+    def _ensure_local_engine(self):
+        """Lazy load local model if in-process inference is needed."""
+        if self._local_model is None:
+            from strands_decider.infer import EngineConfig, SystemOneEngine
+            from strands_decider.modeling import StrandsDeciderModel
+
+            logger.info("Loading local StrandsDeciderModel in-process: %s", self._model_id)
+            model = StrandsDeciderModel.load(self._model_id)
+            cfg = EngineConfig(device=self._device, model_name=self._model_id)
+            self._local_model = SystemOneEngine(model, cfg)
+        return self._local_model
+
+    def decide(self, user_message: str) -> DeciderResult:
+        """Route the prompt using real Strands Decider 2B.
+
+        Times the decision strictly with time.perf_counter() around the real call.
+        Disables caching headers to ensure pure execution latency measurement.
+        """
         payload = {
             "state": user_message,
             "questions": {ROUTING_QUESTION_ID: ROUTING_QUESTION},
+            "model": self._model_id,
         }
 
+        # Attempt HTTP call to strands-decider serve
         try:
-            resp = httpx.post(
-                f"{self._server_url}/v1/systemone",
-                json=payload,
-                timeout=10.0,
-            )
+            headers = {
+                "Cache-Control": "no-cache, no-store",
+                "Pragma": "no-cache",
+                "Content-Type": "application/json",
+            }
+            start = time.perf_counter()
+            with httpx.Client(timeout=15.0) as client:
+                resp = client.post(
+                    f"{self._server_url}/v1/systemone",
+                    json=payload,
+                    headers=headers,
+                )
+            elapsed_ms = (time.perf_counter() - start) * 1000
             resp.raise_for_status()
             data = resp.json()
-        except Exception as exc:
-            logger.error("Decider HTTP call failed: %s - defaulting to frontier", exc)
-            elapsed_ms = (time.perf_counter() - start) * 1000
+
+            answers = data.get("answers", {})
+            ans = answers.get(ROUTING_QUESTION_ID, {})
+
+            # In strands-decider, ChoiceAnswer has field 'choice'
+            choice = ans.get("choice", "frontier")
+            confidence = float(ans.get("confidence", 0.0))
+            probabilities = {k: float(v) for k, v in ans.get("probabilities", {}).items()}
+
+            self.last_latency_ms = round(elapsed_ms, 2)
+
             return DeciderResult(
-                choice="frontier",
-                confidence=0.0,
-                probabilities={"small": 0.0, "frontier": 1.0},
-                latency_ms=round(elapsed_ms, 2),
-                raw_response={"error": str(exc)},
+                choice=choice,
+                confidence=confidence,
+                probabilities=probabilities,
+                latency_ms=self.last_latency_ms,
+                raw_response=data,
             )
 
-        elapsed_ms = (time.perf_counter() - start) * 1000
+        except Exception as http_exc:
+            logger.warning(
+                "Decider HTTP call to %s failed (%s). Trying local in-process fallback.",
+                self._server_url, http_exc,
+            )
 
-        answers = data.get("answers", {})
-        answer = answers.get(ROUTING_QUESTION_ID, {})
+            # Try local in-process execution before failing
+            try:
+                from strands_decider.schema import ChoiceQuestion, SystemOneRequest
 
-        result = DeciderResult(
-            choice=answer.get("value", "frontier"),
-            confidence=answer.get("confidence", 0.0),
-            probabilities=answer.get("probabilities", {}),
-            latency_ms=round(elapsed_ms, 2),
-            raw_response=data,
-        )
+                engine = self._ensure_local_engine()
+                q = ChoiceQuestion(
+                    type="choice",
+                    instructions=ROUTING_QUESTION["instructions"],
+                    criteria=ROUTING_QUESTION["criteria"],
+                )
+                req = SystemOneRequest(
+                    state=user_message,
+                    questions={ROUTING_QUESTION_ID: q},
+                    model=self._model_id,
+                )
 
-        logger.info(
-            "Decider HTTP: choice=%s confidence=%.3f latency=%.1fms",
-            result.choice, result.confidence, result.latency_ms,
-        )
-        return result
+                start = time.perf_counter()
+                resp = engine.evaluate(req)
+                elapsed_ms = (time.perf_counter() - start) * 1000
 
+                ans = resp.answers[ROUTING_QUESTION_ID]
+                self.last_latency_ms = round(elapsed_ms, 2)
 
-# ---------------------------------------------------------------------------
-# Mock client - zero cost testing
-# ---------------------------------------------------------------------------
-
-class MockDeciderClient(BaseDeciderClient):
-    """Deterministic mock for testing. No model weights, no HTTP calls."""
-
-    def __init__(
-        self,
-        default_choice: str = "small",
-        default_confidence: float = 0.85,
-        randomize: bool = False,
-        seed: int = 42,
-    ):
-        self._default_choice = default_choice
-        self._default_confidence = default_confidence
-        self._randomize = randomize
-        self._rng = random.Random(seed)
-        logger.info("MockDeciderClient initialized (randomize=%s)", randomize)
-
-    def decide(self, user_message: str) -> DeciderResult:
-        start = time.perf_counter()
-
-        if self._randomize:
-            # Use complexity signals to simulate realistic routing
-            msg_lower = user_message.lower()
-            msg_len = len(user_message)
-
-            # Complexity indicators
-            complex_keywords = [
-                "explain", "debug", "design", "analyze", "compare", "implement",
-                "write a", "walk through", "trade-off", "architecture",
-                "step by step", "optimize", "security", "vulnerab", "concurrent",
-                "distributed", "algorithm", "complexity", "refactor",
-                "multi-step", "reasoning", "race condition", "protocol",
-                "trade-offs", "database schema", "crawler", "internals",
-            ]
-            simple_keywords = [
-                "what is", "how many", "name", "list", "capital", "convert",
-                "define", "translate", "reverse", "sort", "plural", "stand for",
-                "color", "symbol", "year", "boiling", "square root", "rewrite",
-                "capitalize", "remove", "who wrote", "what does", "who is",
-                "which", "calculate", "math", "past tense", "ocean",
-            ]
-
-            complex_score = sum(1 for kw in complex_keywords if kw in msg_lower)
-            simple_score = sum(1 for kw in simple_keywords if kw in msg_lower)
-
-            if complex_score > simple_score or msg_len > 180:
-                frontier_prob = 0.82 + self._rng.random() * 0.15
-                choice = "frontier"
-                confidence = 0.75 + self._rng.random() * 0.22
-            elif simple_score > 0 and complex_score == 0:
-                frontier_prob = 0.05 + self._rng.random() * 0.18
-                choice = "small"
-                # Most simple questions are high confidence, but ~15% are borderline (0.62-0.68)
-                if self._rng.random() < 0.16:
-                    confidence = 0.62 + self._rng.random() * 0.06
-                else:
-                    confidence = 0.76 + self._rng.random() * 0.20
-            else:
-                frontier_prob = 0.45 + self._rng.random() * 0.2
-                choice = "frontier" if frontier_prob > 0.5 else "small"
-                confidence = 0.60 + self._rng.random() * 0.25
-
-            small_prob = 1.0 - frontier_prob
-        else:
-            choice = self._default_choice
-            confidence = self._default_confidence
-            small_prob = 0.85 if choice == "small" else 0.15
-            frontier_prob = 1.0 - small_prob
-
-        # Simulate ~2-5ms decision latency
-        time.sleep(self._rng.uniform(0.002, 0.005))
-        elapsed_ms = (time.perf_counter() - start) * 1000
-
-        return DeciderResult(
-            choice=choice,
-            confidence=round(confidence, 3),
-            probabilities={"small": round(small_prob, 3), "frontier": round(frontier_prob, 3)},
-            latency_ms=round(elapsed_ms, 2),
-            raw_response={"mock": True},
-        )
+                return DeciderResult(
+                    choice=ans.choice,
+                    confidence=ans.confidence,
+                    probabilities=ans.probabilities,
+                    latency_ms=self.last_latency_ms,
+                    raw_response=resp.model_dump(),
+                )
+            except Exception as local_exc:
+                raise ConnectionError(
+                    f"Strands Decider 2B is unreachable via HTTP at {self._server_url} ({http_exc}) "
+                    f"and local in-process execution failed ({local_exc}). "
+                    f"To start the decider server, run:\n"
+                    f"  strands-decider serve {self._model_id} --port 8001"
+                ) from http_exc

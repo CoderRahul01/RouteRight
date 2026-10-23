@@ -3,7 +3,8 @@
 import pytest
 
 from routeright.config import RouterConfig
-from routeright.decider import MockDeciderClient, DeciderResult
+from routeright.decider import DeciderResult
+from tests.fakes.decider import MockDeciderClient
 from routeright.router import RouteRightRouter
 
 
@@ -203,3 +204,28 @@ class TestSavingsSummary:
         assert summary["total_decisions"] == 5
         assert summary["routed_small"] == 5
         assert summary["percent_small"] == 100.0
+
+
+# ---------------------------------------------------------------------------
+# Real Decider Client tests
+# ---------------------------------------------------------------------------
+
+class TestRealDeciderClient:
+    def test_health_check_unreachable(self):
+        from routeright.decider import DeciderClient
+        client = DeciderClient(server_url="http://127.0.0.1:9999")
+        health = client.check_health()
+        assert health["status"] == "unreachable"
+        assert health["connected"] is False
+        assert "instructions" in health
+        assert "strands-decider serve" in health["instructions"]
+
+    def test_unreachable_raises_descriptive_error(self):
+        from routeright.decider import DeciderClient
+        client = DeciderClient(
+            server_url="http://127.0.0.1:9999",
+            model_id="non-existent-model-id-xyz",
+        )
+        with pytest.raises(ConnectionError) as exc_info:
+            client.decide("Hello world")
+        assert "strands-decider serve" in str(exc_info.value)

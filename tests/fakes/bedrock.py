@@ -1,7 +1,4 @@
-"""Mock Bedrock client for zero-cost testing.
-
-Provides fake LLM responses with realistic token counts and latency simulation.
-"""
+"""Mock Bedrock client for unit tests."""
 
 from __future__ import annotations
 
@@ -21,7 +18,6 @@ class MockBedrockResponse:
     latency_ms: float
 
 
-# Simple canned responses for mock mode
 _SMALL_RESPONSES = [
     "The answer is 42.",
     "Paris is the capital of France.",
@@ -46,10 +42,8 @@ class MockBedrockClient:
         self._rng = random.Random(seed)
 
     def invoke(self, model_id: str, prompt: str, max_tokens: int = 1024) -> MockBedrockResponse:
-        """Simulate a Bedrock model invocation."""
-        is_frontier = "sonnet" in model_id.lower() or "opus" in model_id.lower()
+        is_frontier = "sonnet" in model_id.lower() or "opus" in model_id.lower() or "pro" in model_id.lower()
 
-        # Simulate latency - frontier models are slower
         if is_frontier:
             latency = self._rng.uniform(800, 2500)
             response_text = self._rng.choice(_FRONTIER_RESPONSES)
@@ -59,9 +53,9 @@ class MockBedrockClient:
             response_text = self._rng.choice(_SMALL_RESPONSES)
             tokens_out = self._rng.randint(20, 80)
 
-        time.sleep(latency / 1000)  # Actually wait to simulate real latency
+        time.sleep(latency / 1000)
 
-        tokens_in = len(prompt.split()) * 2  # Rough token estimate
+        tokens_in = len(prompt.split()) * 2
 
         return MockBedrockResponse(
             text=response_text,

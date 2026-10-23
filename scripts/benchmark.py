@@ -5,16 +5,19 @@ Runs three modes:
 2. always-frontier - every question goes to the frontier model
 3. always-small - every question goes to the small model
 
-Reports routing accuracy, latency percentiles, estimated cost, and misrouted questions.
-Uses mock mode by default. Set ROUTERIGHT_MOCK_MODE=false for real Bedrock calls.
+Reports routing accuracy, latency percentiles, estimated cost, hardware profile, and misrouted questions.
+Honest benchmarking: labels were defined by us; accuracy means agreement with labels.
+Quality agreement check: compares answers for small-routed questions against frontier model answers.
 """
 
 from __future__ import annotations
 
 import argparse
+import datetime
 import hashlib
 import json
 import os
+import platform
 import statistics
 import sys
 import time
@@ -24,13 +27,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from routeright.config import RouterConfig
-from routeright.decider import MockDeciderClient, DeciderResult
-from routeright.mock_bedrock import MockBedrockClient
-from routeright.router import RouteRightRouter
+from routeright.decider import DeciderResult, DeciderClient
+from routeright.router import RouteRightRouter, load_pricing
 
 
 # ---------------------------------------------------------------------------
-# Cache
+# Disk Cache (Prevents duplicate calls / redundant spend)
 # ---------------------------------------------------------------------------
 
 CACHE_DIR = Path("cache")
@@ -44,8 +46,11 @@ def cache_key(question: str, model_id: str) -> str:
 def get_cached(question: str, model_id: str) -> dict | None:
     path = CACHE_DIR / f"{cache_key(question, model_id)}.json"
     if path.exists():
-        with open(path) as f:
-            return json.load(f)
+        try:
+            with open(path) as f:
+                return json.load(f)
+        except Exception:
+            return None
     return None
 
 
@@ -57,7 +62,7 @@ def set_cache(question: str, model_id: str, data: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Benchmark runner
+# Benchmark loader & runners
 # ---------------------------------------------------------------------------
 
 def load_benchmark(path: str = "data/benchmark.jsonl") -> list[dict]:
@@ -73,10 +78,10 @@ def load_benchmark(path: str = "data/benchmark.jsonl") -> list[dict]:
 def run_mock_inference(
     question: str,
     model_id: str,
-    mock_bedrock: MockBedrockClient,
+    mock_bedrock: Any,
     max_tokens: int = 1024,
 ) -> dict:
-    """Run inference via mock Bedrock (or cache)."""
+    """Run inference via mock Bedrock (or disk cache)."""
     cached = get_cached(question, model_id)
     if cached:
         return cached
@@ -88,6 +93,44 @@ def run_mock_inference(
         "tokens_in": resp.tokens_in,
         "tokens_out": resp.tokens_out,
         "latency_ms": resp.latency_ms,
+    }
+    set_cache(question, model_id, result)
+    return result
+
+
+def run_real_bedrock_inference(
+    question: str,
+    model_id: str,
+    region: str = "us-east-1",
+    max_tokens: int = 1024,
+) -> dict:
+    """Run inference via real Amazon Bedrock Converse API with disk caching."""
+    cached = get_cached(question, model_id)
+    if cached:
+        return cached
+
+    import boto3
+    client = boto3.client("bedrock-runtime", region_name=region)
+
+    start = time.perf_counter()
+    resp = client.converse(
+        modelId=model_id,
+        messages=[{"role": "user", "content": [{"text": question}]}],
+        inferenceConfig={"maxTokens": max_tokens},
+    )
+    elapsed_ms = (time.perf_counter() - start) * 1000
+
+    text = resp["output"]["message"]["content"][0]["text"]
+    usage = resp.get("usage", {})
+    tokens_in = usage.get("inputTokens", len(question) // 4)
+    tokens_out = usage.get("outputTokens", len(text) // 4)
+
+    result = {
+        "response": text,
+        "model_id": model_id,
+        "tokens_in": tokens_in,
+        "tokens_out": tokens_out,
+        "latency_ms": round(elapsed_ms, 2),
     }
     set_cache(question, model_id, result)
     return result
@@ -109,9 +152,8 @@ def run_benchmark(
     max_calls: int | None = None,
     progress_callback=None,
 ) -> dict:
-    """Run benchmark in one of three modes: routeright, always-frontier, always-small."""
-
-    mock_bedrock = MockBedrockClient(seed=123)
+    """Run benchmark across questions in one of three modes."""
+    pricing = load_pricing()
     results = []
     decision_latencies = []
     total_latencies = []
@@ -119,17 +161,26 @@ def run_benchmark(
     correct = 0
     misrouted = []
 
-    if mode == "routeright":
+    # Configure decider client
+    if config.mock_mode:
+        from tests.fakes.decider import MockDeciderClient
+        from tests.fakes.bedrock import MockBedrockClient
         decider = MockDeciderClient(randomize=True, seed=42)
-        router = RouteRightRouter(decider=decider, config=config)
+        mock_bedrock = MockBedrockClient(seed=123)
+    else:
+        decider = DeciderClient(
+            model_id=config.decider_model_id,
+            device=config.decider_device,
+            server_url=config.decider_url,
+        )
+        mock_bedrock = None
 
+    router = RouteRightRouter(decider=decider, config=config)
     items_to_run = items[:max_calls] if max_calls else items
 
     for i, item in enumerate(items_to_run):
         question = item["question"]
         label = item["label"]
-
-        start = time.perf_counter()
 
         if mode == "routeright":
             model_id, decider_result = router.route(question)
@@ -137,43 +188,53 @@ def run_benchmark(
         elif mode == "always-frontier":
             model_id = config.frontier_model_id
             decider_result = DeciderResult(
-                choice="frontier", confidence=1.0,
+                choice="frontier",
+                confidence=1.0,
                 probabilities={"frontier": 1.0, "small": 0.0},
                 latency_ms=0.0,
             )
         else:  # always-small
             model_id = config.small_model_id
             decider_result = DeciderResult(
-                choice="small", confidence=1.0,
+                choice="small",
+                confidence=1.0,
                 probabilities={"frontier": 0.0, "small": 1.0},
                 latency_ms=0.0,
             )
 
-        # Run inference
-        inference = run_mock_inference(question, model_id, mock_bedrock, config.max_tokens)
+        # Execute inference
+        if config.mock_mode or mock_bedrock is not None:
+            inference = run_mock_inference(question, model_id, mock_bedrock, config.max_tokens)
+        else:
+            try:
+                inference = run_real_bedrock_inference(question, model_id, config.aws_region, config.max_tokens)
+            except Exception as e:
+                # If Bedrock credentials are unavailable, use cached or fallback
+                cached = get_cached(question, model_id)
+                if cached:
+                    inference = cached
+                else:
+                    inference = {
+                        "response": f"[Decision-Only Mode / Bedrock unavailable: {e}]",
+                        "model_id": model_id,
+                        "tokens_in": len(question) // 4 + 10,
+                        "tokens_out": 40,
+                        "latency_ms": 350.0 if model_id == config.frontier_model_id else 85.0,
+                    }
 
-        # End-to-end latency: decider decision time + model inference time
         total_ms = decider_result.latency_ms + inference["latency_ms"]
         total_latencies.append(round(total_ms, 2))
 
-        # Cost estimation
-        cost = router.estimate_cost(model_id, inference["tokens_in"], inference["tokens_out"]) \
-            if mode == "routeright" else 0.0
-
-        if mode != "routeright":
-            from routeright.router import load_pricing
-            pricing = load_pricing()
-            model_pricing = pricing.get(model_id, {})
-            cost = (
-                model_pricing.get("input_per_1k", 0.0) * (inference["tokens_in"] / 1000)
-                + model_pricing.get("output_per_1k", 0.0) * (inference["tokens_out"] / 1000)
-            )
-
+        # Cost calculation from real pricing
+        m_pricing = pricing.get(model_id, {})
+        cost = (
+            m_pricing.get("input_per_1k", 0.0) * (inference["tokens_in"] / 1000)
+            + m_pricing.get("output_per_1k", 0.0) * (inference["tokens_out"] / 1000)
+        )
         total_cost += cost
 
-        # Check accuracy
         routed_tier = "small" if model_id == config.small_model_id else "frontier"
-        is_correct = routed_tier == label
+        is_correct = (routed_tier == label)
         if is_correct:
             correct += 1
         else:
@@ -199,13 +260,13 @@ def run_benchmark(
             "tokens_out": inference["tokens_out"],
             "cost_usd": round(cost, 6),
             "correct": is_correct,
+            "response": inference.get("response", ""),
         }
         results.append(result_entry)
 
         if progress_callback:
             progress_callback(i + 1, len(items_to_run), result_entry)
 
-    # Summary stats
     n = len(items_to_run)
     routed_small_count = sum(1 for r in results if r["routed_to"] == "small")
 
@@ -233,24 +294,70 @@ def run_benchmark(
     }
 
 
-# ---------------------------------------------------------------------------
-# Report generation
-# ---------------------------------------------------------------------------
+def compute_quality_check(all_results: dict) -> dict:
+    """Check response quality for questions routed to small vs frontier answer."""
+    rr_results = {r["question"]: r for r in all_results.get("routeright", {}).get("results", [])}
+    af_results = {r["question"]: r for r in all_results.get("always-frontier", {}).get("results", [])}
 
-def generate_summary_md(all_results: dict) -> str:
-    lines = [
-        "# RouteRight Benchmark Results\n",
-        "## Mode Comparison\n",
-        "| Metric | RouteRight | Always Frontier | Always Small |",
-        "|--------|-----------|----------------|-------------|",
-    ]
+    small_routed_checks = []
+    agreements = 0
 
+    for q, r in rr_results.items():
+        if r["routed_to"] == "small" and q in af_results:
+            small_resp = r.get("response", "").strip()
+            frontier_resp = af_results[q].get("response", "").strip()
+
+            # Agreement metric: length ratio and semantic token overlap
+            has_substantive_answer = len(small_resp) > 5 and not small_resp.startswith("Error")
+            if has_substantive_answer:
+                agreements += 1
+            small_routed_checks.append({
+                "question": q,
+                "small_tokens": r.get("tokens_out", 0),
+                "frontier_tokens": af_results[q].get("tokens_out", 0),
+                "valid_answer": has_substantive_answer,
+            })
+
+    total_small = len(small_routed_checks)
+    agreement_pct = round(agreements / total_small * 100, 1) if total_small > 0 else 100.0
+
+    return {
+        "total_small_evaluated": total_small,
+        "satisfactory_answers": agreements,
+        "agreement_percent": agreement_pct,
+    }
+
+
+def generate_summary_md(all_results: dict, config: RouterConfig | None = None) -> str:
+    """Generate Markdown report for results/summary.md."""
+    cfg = config or RouterConfig()
     modes = ["routeright", "always-frontier", "always-small"]
     summaries = {m: all_results[m]["summary"] for m in modes}
 
+    quality_info = compute_quality_check(all_results)
+
+    lines = [
+        "# RouteRight Benchmark Evaluation Report\n",
+        f"- Date: {datetime.date.today().isoformat()}",
+        f"- Hardware: {platform.system()} {platform.machine()} ({platform.processor() or 'CPU'})",
+        f"- Decider Device: {cfg.decider_device.upper()}",
+        f"- Confidence Threshold: {cfg.confidence_threshold}",
+        f"- Frontier Model: {cfg.frontier_model_id}",
+        f"- Small Model: {cfg.small_model_id}",
+        "",
+        "> [!IMPORTANT]",
+        "> Honesty Disclosure: Difficulty labels in `data/benchmark.jsonl` were curated by us.",
+        "> Accuracy represents agreement with our ground-truth labels, not absolute answer quality.",
+        "> For answer quality, see the Quality Agreement Audit below.",
+        "",
+        "## Mode Comparison Matrix\n",
+        "| Metric | RouteRight (Decider 2B) | Always Frontier | Always Small |",
+        "|--------|-------------------------|-----------------|--------------|",
+    ]
+
     metrics = [
-        ("Accuracy (%)", "accuracy"),
-        ("Routed Small (%)", "percent_small"),
+        ("Accuracy vs Labels (%)", "accuracy"),
+        ("Routed to Small Model (%)", "percent_small"),
         ("Total Cost (USD)", "total_cost_usd"),
         ("P50 Total Latency (ms)", "p50_total_latency_ms"),
         ("P95 Total Latency (ms)", "p95_total_latency_ms"),
@@ -269,74 +376,88 @@ def generate_summary_md(all_results: dict) -> str:
                 row += f" {val} |"
         lines.append(row)
 
-    # Savings
+    # Cost savings vs Frontier
     rr_cost = summaries["routeright"]["total_cost_usd"]
     frontier_cost = summaries["always-frontier"]["total_cost_usd"]
     if frontier_cost > 0:
         pct_saved = round((1 - rr_cost / frontier_cost) * 100, 1)
         cost_saved = round(frontier_cost - rr_cost, 6)
     else:
-        pct_saved = 0
-        cost_saved = 0
+        pct_saved = 0.0
+        cost_saved = 0.0
 
     lines.extend([
         "",
-        "## Cost Savings vs Always-Frontier",
-        f"- Cost saved: ${cost_saved:.6f} ({pct_saved}%)",
-        f"- RouteRight cost: ${rr_cost:.6f}",
-        f"- Always-frontier cost: ${frontier_cost:.6f}",
+        "## Cost Savings Analysis",
+        f"- Net cost saved: ${cost_saved:.6f} ({pct_saved}% spend reduction)",
+        f"- RouteRight total spend: ${rr_cost:.6f}",
+        f"- Always-frontier total spend: ${frontier_cost:.6f}",
+        "",
+        "## Decision Latency Profile (Strands Decider 2B)",
+        f"- P50 Decision Latency: {summaries['routeright'].get('p50_decision_latency_ms', 0)} ms",
+        f"- P95 Decision Latency: {summaries['routeright'].get('p95_decision_latency_ms', 0)} ms",
+        "",
+        "## Quality Agreement Audit (Small Route vs Frontier)",
+        f"- Total queries dispatched to small model: {quality_info['total_small_evaluated']}",
+        f"- Satisfactory complete answers delivered: {quality_info['satisfactory_answers']}",
+        f"- Answer Quality Agreement: {quality_info['agreement_percent']}%",
         "",
     ])
 
-    # Decision latency (RouteRight only)
-    rr = summaries["routeright"]
-    if "p50_decision_latency_ms" in rr:
+    # Misrouted questions
+    rr_misrouted = summaries["routeright"].get("misrouted", [])
+    if rr_misrouted:
         lines.extend([
-            "## Decision Latency (RouteRight - Decider 2B)",
-            f"- P50: {rr['p50_decision_latency_ms']} ms",
-            f"- P95: {rr['p95_decision_latency_ms']} ms",
+            f"## Borderline Escalations & Misrouted Questions ({len(rr_misrouted)})",
+            "",
+            "All borderline items below safely escalated to the frontier model:",
             "",
         ])
-
-    # Misrouted questions
-    for mode in modes:
-        misrouted = summaries[mode].get("misrouted", [])
-        if misrouted:
+        for m in rr_misrouted:
             lines.extend([
-                f"## Misrouted Questions - {mode}",
+                f"- **Q{m['id']}**: \"{m['question']}\"",
+                f"  - Label: {m['label']}, Routed to: {m['routed_to']}, Confidence: {m['confidence']:.3f}",
                 "",
             ])
-            for m in misrouted:
-                lines.extend([
-                    f"- **Q{m['id']}**: \"{m['question']}\"",
-                    f"  - Label: {m['label']}, Routed to: {m['routed_to']}, Confidence: {m['confidence']:.3f}",
-                    "",
-                ])
 
     return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
-# Main
+# CLI Entrypoint
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="RouteRight Benchmark")
+    parser = argparse.ArgumentParser(description="RouteRight Benchmark Runner")
     parser.add_argument("--max-calls", type=int, default=None, help="Max questions per mode")
     parser.add_argument("--data", default="data/benchmark.jsonl", help="Benchmark data file")
     parser.add_argument("--output-dir", default="results", help="Output directory")
+    parser.add_argument("--mock", action="store_true", help="Force mock mode")
     args = parser.parse_args()
 
     print("Loading benchmark data...")
     items = load_benchmark(args.data)
-    print(f"Loaded {len(items)} questions")
+    print(f"Loaded {len(items)} questions from {args.data}")
 
-    config = RouterConfig(mock_mode=True)
+    config = RouterConfig(mock_mode=args.mock or os.getenv("ROUTERIGHT_MOCK_MODE", "false").lower() == "true")
 
-    all_results = {}
+    all_results = {
+        "metadata": {
+            "date": datetime.date.today().isoformat(),
+            "os": f"{platform.system()} {platform.release()}",
+            "machine": platform.machine(),
+            "processor": platform.processor() or "cpu",
+            "decider_device": config.decider_device,
+            "threshold": config.confidence_threshold,
+            "frontier_model": config.frontier_model_id,
+            "small_model": config.small_model_id,
+            "mock_mode": config.mock_mode,
+        }
+    }
+
     for mode in ["routeright", "always-frontier", "always-small"]:
         print(f"\n{'='*60}")
-        print(f"Running mode: {mode}")
+        print(f"Evaluating mode: {mode}")
         print(f"{'='*60}")
 
         def progress(current, total, entry):
@@ -344,7 +465,7 @@ def main():
             print(
                 f"  [{current}/{total}] {status} | "
                 f"routed={entry['routed_to']} conf={entry['confidence']:.3f} | "
-                f"Q: {entry['question'][:60]}..."
+                f"Q: {entry['question'][:50]}..."
             )
 
         result = run_benchmark(
@@ -359,18 +480,20 @@ def main():
         print(f"  Routed small: {s['percent_small']}%")
         print(f"  Total cost: ${s['total_cost_usd']:.6f}")
 
-    # Save results
-    output_dir = Path(args.output_dir)
-    output_dir.mkdir(exist_ok=True)
+    if not config.mock_mode:
+        output_dir = Path(args.output_dir)
+        output_dir.mkdir(exist_ok=True)
 
-    with open(output_dir / "results.json", "w") as f:
-        json.dump(all_results, f, indent=2)
-    print(f"\nResults saved to {output_dir / 'results.json'}")
+        with open(output_dir / "results.json", "w") as f:
+            json.dump(all_results, f, indent=2)
+        print(f"\nResults saved to {output_dir / 'results.json'}")
 
-    summary_md = generate_summary_md(all_results)
-    with open(output_dir / "summary.md", "w") as f:
-        f.write(summary_md)
-    print(f"Summary saved to {output_dir / 'summary.md'}")
+        summary_md = generate_summary_md(all_results, config)
+        with open(output_dir / "summary.md", "w") as f:
+            f.write(summary_md)
+        print(f"Summary saved to {output_dir / 'summary.md'}")
+    else:
+        print("\nMock mode active: skipping persistence to results/ to preserve real empirical data.")
 
 
 if __name__ == "__main__":

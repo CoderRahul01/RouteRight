@@ -24,12 +24,13 @@ flowchart TD
 
 1. **`routeright.pattern`**:
    - `spec.py`: Defines the typed question (`model_routing_tier`, options `["small", "frontier"]`).
-   - `wiring.py`: Exposes `RouteRightPattern` and `RouteRightInterventionHandler` for Strands integration.
-   - `example.py`: 20-line copy-paste code snippet for agent developers.
+   - `wiring.py`: Exposes `DeciderRoutingStrategy` (implements Strands `RoutingStrategy`), `RouteRightPattern`, and `create_decider_router`.
+   - `example.py`: Real executable Strands `Agent(model=router)` example.
+   - `PATTERN.md`: Pattern specification, wiring guide, threshold tuning, and production limits.
 
 2. **`routeright.decider`**:
-   - `StrandsDeciderModel` (in-process) and HTTP client (`POST /v1/systemone`).
-   - `MockDeciderClient` for deterministic testing with calibrated confidence distributions and zero AWS cost.
+   - `StrandsDeciderClient`: HTTP client (`POST /v1/systemone`) and in-process fallback using `strands_decider.infer.SystemOneEngine`.
+   - Timing: `time.perf_counter()` wrapping raw HTTP/inference with no-cache headers.
 
 3. **`routeright.router`**:
    - `RouteRightRouter`: Implements the core escalation rule.
@@ -38,15 +39,16 @@ flowchart TD
 
 4. **`routeright.server` & `routeright.static`**:
    - FastAPI backend with SSE streaming endpoint (`/api/benchmark/stream`).
-   - Dark-theme web dashboard with live chat, real-time savings meter, and benchmark comparisons.
+   - Dark editorial dashboard with live routing inspection, real-time savings meter, and benchmark comparisons.
+   - Guarded simulation banner if `ROUTERIGHT_MOCK_MODE=true` is set.
 
 5. **`scripts/benchmark.py`**:
    - Evaluation runner testing 50 benchmark queries across 3 modes: `routeright`, `always-frontier`, and `always-small`.
+   - Measures decision latency, end-to-end latency, real Bedrock token cost, and agreement against reference labels.
    - Generates `results/results.json` and `results/summary.md`.
 
 ## Latency and Cost Efficiency
 
-- **Decider 2B Decision Overhead**: 3-6 ms.
-- **Small Model Latency**: 200-500 ms (vs 1200-2500 ms on frontier).
-- **Cost Differential**: Small models cost 10x-20x less per token than frontier models.
-- **Fail-Safe Guarantee**: If Decider 2B is unreachable or confidence is below threshold, RouteRight unconditionally routes to frontier.
+- **Decider 2B Decision Overhead**: Micro-decision latency measured with `time.perf_counter()` (results logged in `results/results.json`).
+- **Cost Differential**: Small models cost significantly less per token than frontier models based on official AWS pricing.
+- **Fail-Safe Guarantee**: If Decider 2B is unreachable or confidence is below threshold, RouteRight unconditionally routes to frontier. Hard questions escalate to the frontier model.

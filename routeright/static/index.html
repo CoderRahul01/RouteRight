@@ -68,7 +68,7 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Classical Editorial Serif Headline (Egyptienne F LT Voice) */
+        /* Classical Editorial Serif Headline */
         .serif-headline {
             font-family: 'Source Serif 4', Georgia, serif;
             letter-spacing: -0.030em;
@@ -77,14 +77,14 @@
             font-weight: 400;
         }
 
-        /* Typographic Furniture Micro-Labels (Diatype Mono Voice) */
+        /* Typographic Furniture Micro-Labels */
         .mono-label {
             font-family: 'JetBrains Mono', monospace;
             text-transform: uppercase;
             letter-spacing: 0.090em;
         }
 
-        /* Abstract Fluid Gradient Artwork (The ONLY chromatic color in the system) */
+        /* Abstract Fluid Gradient Artwork */
         .art-swirl-1 {
             background: 
                 radial-gradient(at 0% 0%, #ff5722 0px, transparent 55%),
@@ -126,7 +126,7 @@
             pointer-events: none;
         }
 
-        /* Filled Dark Button (Sole filled button in Adaptive ML) */
+        /* Filled Dark Button */
         .btn-ink {
             background-color: #272421;
             color: #ffffff;
@@ -176,7 +176,7 @@
             border-color: #e3e3e2;
         }
 
-        /* Workflow Tab Pill (Stadium Shape: 9999px) */
+        /* Workflow Tab Pill */
         .pill-tab {
             border-radius: 9999px;
             padding: 10px 20px;
@@ -205,19 +205,6 @@
             background-color: #edebe8;
         }
 
-        /* Case Study Tag */
-        .tag-case-study {
-            background-color: #edebe8;
-            color: #272421;
-            border-radius: 9999px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.090em;
-            padding: 6px 12px;
-            display: inline-block;
-        }
-
         /* Minimal scrollbar */
         .scrollbar-monograph::-webkit-scrollbar {
             width: 4px;
@@ -237,33 +224,32 @@
         .animate-fade-in {
             animation: fadeIn 0.22s ease-out forwards;
         }
-
-        .active-ring {
-            box-shadow: 0 0 0 2px #272421, 0px 4px 12px 0px rgba(39, 36, 33, 0.1);
-        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col bg-white text-ink selection:bg-paper-warm selection:text-ink">
 
-    <!-- Site Header (Adaptive ML Pattern: Height 76px, Border #edebe8, Max-width 1200px) -->
+    <!-- Persistent Simulation Warning Banner (Active only if ROUTERIGHT_MOCK_MODE=true) -->
+    <div id="simulated-banner" class="hidden w-full bg-red-600 text-white font-mono text-center text-xs py-2 font-bold tracking-widest uppercase sticky top-0 z-50">
+        SIMULATED, NOT REAL - RUNNING WITH SYNTHETIC FAKES (RESULTS NOT PERSISTED)
+    </div>
+
+    <!-- Site Header -->
     <header class="border-b border-paper-warm sticky top-0 z-40 bg-white/95 backdrop-blur-sm">
         <div class="max-w-[1200px] mx-auto px-6 h-20 flex items-center justify-between">
             <!-- Brand Wordmark & Cluster Mark -->
             <a href="javascript:void(0)" onclick="switchView('landing')" class="flex items-center gap-3 group">
-                <!-- Three-dot Constellation Node Icon -->
                 <div class="flex items-center gap-1.5 text-ink">
                     <span class="w-2.5 h-2.5 rounded-full bg-ink"></span>
                     <span class="w-2.5 h-2.5 rounded-full bg-ink"></span>
                     <span class="w-2.5 h-2.5 rounded-full bg-ink"></span>
                 </div>
                 <div class="flex items-baseline">
-                    <span class="font-medium text-[19px] tracking-tight text-ink">Adaptive</span>
-                    <span class="font-serif italic text-stone ml-1 text-[17px]">RouteRight</span>
+                    <span class="font-medium text-[19px] tracking-tight text-ink">RouteRight</span>
                     <sup class="mono-label text-[10px] text-stone ml-2">2B</sup>
                 </div>
             </a>
 
-            <!-- Centered Typographic Furniture Nav -->
+            <!-- Centered Typographic Nav -->
             <nav class="hidden md:flex items-center gap-8">
                 <a href="javascript:void(0)" onclick="switchView('landing'); scrollSection('use-cases');" class="mono-label text-[13px] text-ink hover:text-stone tracking-[0.090em] transition-colors">USE CASES</a>
                 <a href="javascript:void(0)" onclick="switchView('landing'); scrollSection('platform');" class="mono-label text-[13px] text-ink hover:text-stone tracking-[0.090em] transition-colors">PLATFORM</a>
@@ -273,14 +259,7 @@
 
             <!-- Right Action Area -->
             <div class="flex items-center gap-4">
-                <!-- Live Visitor Counter Badge -->
-                <div id="nav-visitor-badge" class="hidden sm:flex items-center gap-2 bg-paper-warm px-3.5 py-1.5 rounded-pill text-[11px] mono-label text-stone border border-paper-cool">
-                    <span class="w-1.5 h-1.5 rounded-full bg-ink animate-pulse"></span>
-                    <span id="nav-visitor-count">18 BUILDERS ONLINE</span>
-                </div>
-
-                <!-- Launch Dashboard / Navigation Toggle -->
-                <button id="nav-cta-btn" onclick="handleDashboardCta()" class="btn-ink text-[12px] py-2 px-5">
+                <button id="nav-cta-btn" onclick="switchView('dashboard')" class="btn-ink text-[12px] py-2 px-5">
                     <span>LAUNCH DASHBOARD</span>
                     <span class="text-xs">&rarr;</span>
                 </button>
@@ -289,32 +268,28 @@
     </header>
 
     <!-- ===================================================================== -->
-    <!-- VIEW 1: LANDING PAGE (Printed Monograph Style)                         -->
+    <!-- VIEW 1: LANDING PAGE                                                  -->
     <!-- ===================================================================== -->
     <div id="view-landing" class="w-full flex-1 flex flex-col">
 
-        <!-- Hero Section (White canvas, centered, generous vertical padding) -->
+        <!-- Hero Section -->
         <section class="max-w-[1200px] mx-auto px-6 pt-20 pb-16 text-center flex flex-col items-center">
-            <!-- Section Micro-label -->
             <div class="mono-label text-[11px] text-stone mb-6 flex items-center justify-center gap-2">
                 <span>001 ARCHITECTURE</span>
                 <span class="text-paper-cool">/</span>
                 <span>STRANDS DECIDER 2B + AMAZON BEDROCK</span>
             </div>
 
-            <!-- Grand Editorial Serif Display Headline (Egyptienne F LT Voice) -->
             <h1 class="serif-headline text-5xl sm:text-7xl md:text-[88px] max-w-[1020px] mb-8">
                 Frontier intelligence at small model speed.
             </h1>
 
-            <!-- Supporting Paragraph (Diatype 15px-18px Voice) -->
             <p class="text-[16px] sm:text-[18px] text-stone max-w-[640px] leading-[1.45] mb-10">
-                Strands Decider 2B evaluates prompt complexity in 4.2ms. Easy queries dispatch directly to efficient Bedrock models; complex reasoning escalates to frontier. Quality is never compromised.
+                Strands Decider 2B evaluates prompt complexity locally. Easy queries dispatch directly to efficient Bedrock models; complex reasoning escalates to frontier. Hard questions escalate to the frontier model.
             </p>
 
-            <!-- Action Buttons -->
             <div class="flex flex-col sm:flex-row items-center gap-4 mb-4">
-                <button onclick="handleDashboardCta()" class="btn-ink text-[13px] py-3 px-7">
+                <button onclick="switchView('dashboard')" class="btn-ink text-[13px] py-3 px-7">
                     <span>TRY LIVE CONSOLE</span>
                     <span>&rarr;</span>
                 </button>
@@ -323,53 +298,32 @@
                 </button>
             </div>
 
-            <!-- Free Setup Annotation -->
             <div class="mono-label text-[11px] text-stone mt-2">
                 100% FREE LOCAL INFERENCE &middot; ZERO CLOUD COST DECISION ENGINE &middot; MIT LICENSE
             </div>
         </section>
 
-        <!-- Customer & Ecosystem Social Proof Strip (Monochrome Grayscale) -->
-        <section class="border-y border-paper-warm py-12 bg-white">
+        <!-- Active Technologies Strip (Plain text list, no logos) -->
+        <section class="border-y border-paper-warm py-8 bg-white">
             <div class="max-w-[1200px] mx-auto px-6 flex flex-col items-center">
-                <div class="mono-label text-[11px] text-stone mb-8">POWERED BY OPEN WEIGHTS &amp; CLOUD INFRASTRUCTURE</div>
-                <div class="w-full flex flex-wrap items-center justify-center gap-12 sm:gap-20 text-stone">
-                    
-                    <!-- Partner 1: Strands Agents -->
-                    <div class="flex flex-col items-center gap-2">
-                        <span class="mono-label text-[15px] font-medium tracking-widest text-ink">STRANDS AGENTS</span>
-                        <span class="text-[10px] mono-label text-stone">DECIDER 2B</span>
-                    </div>
-
-                    <!-- Partner 2: Amazon Bedrock with CASE STUDY tag -->
-                    <div class="flex flex-col items-center gap-2">
-                        <span class="mono-label text-[15px] font-medium tracking-widest text-ink">AMAZON BEDROCK</span>
-                        <span class="tag-case-study">CASE STUDY</span>
-                    </div>
-
-                    <!-- Partner 3: Anthropic -->
-                    <div class="flex flex-col items-center gap-2">
-                        <span class="mono-label text-[15px] font-medium tracking-widest text-ink">ANTHROPIC</span>
-                        <span class="text-[10px] mono-label text-stone">CLAUDE 3.7</span>
-                    </div>
-
-                    <!-- Partner 4: Hugging Face -->
-                    <div class="flex flex-col items-center gap-2">
-                        <span class="mono-label text-[15px] font-medium tracking-widest text-ink">HUGGING FACE</span>
-                        <span class="text-[10px] mono-label text-stone">OPEN WEIGHTS</span>
-                    </div>
-
-                    <!-- Partner 5: AWS Trainium -->
-                    <div class="flex flex-col items-center gap-2">
-                        <span class="mono-label text-[15px] font-medium tracking-widest text-ink">AWS TRAINIUM</span>
-                        <span class="text-[10px] mono-label text-stone">INFERENCE</span>
-                    </div>
-
+                <div class="mono-label text-[11px] text-stone mb-4">TECHNOLOGIES IN THE ACTIVE ROUTING PIPELINE</div>
+                <div class="w-full flex flex-wrap items-center justify-center gap-6 sm:gap-12 mono-label text-xs text-ink font-medium tracking-wider">
+                    <span>STRANDS AGENTS</span>
+                    <span class="text-stone font-normal">&middot;</span>
+                    <span>STRANDS DECIDER 2B</span>
+                    <span class="text-stone font-normal">&middot;</span>
+                    <span>AMAZON BEDROCK</span>
+                    <span class="text-stone font-normal">&middot;</span>
+                    <span>HUGGING FACE</span>
+                    <span class="text-stone font-normal">&middot;</span>
+                    <span>FASTAPI</span>
+                    <span class="text-stone font-normal">&middot;</span>
+                    <span>BOTO3</span>
                 </div>
             </div>
         </section>
 
-        <!-- Use Case Cards: 3-Column Wall (THE ONLY CHROMATIC COLOR IN THE SYSTEM) -->
+        <!-- Use Case Cards -->
         <section id="use-cases" class="max-w-[1200px] mx-auto px-6 py-24 w-full">
             <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-8 pb-4 border-b border-paper-warm gap-4">
                 <div>
@@ -381,171 +335,159 @@
                 </div>
             </div>
 
-            <!-- 3-Column Card Grid (9px radius, organic fluid gradient swirl, white text overlay inset bottom-left) -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                
-                <!-- Card 1: High Volume Agent Chat -->
-                <div onclick="launchWithPrompt(0)" class="art-swirl-1 art-grain rounded-card h-[280px] p-6 flex flex-col justify-between cursor-pointer transition-transform duration-200 hover:scale-[1.01] relative overflow-hidden group">
-                    <div class="z-10 flex justify-between items-start">
-                        <span class="mono-label text-[11px] text-white/90 bg-ink/30 backdrop-blur-md px-3 py-1 rounded-pill">
-                            01 CONVERSATIONAL
-                        </span>
-                        <span class="mono-label text-[11px] text-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
-                            TEST &rarr;
-                        </span>
-                    </div>
-                    <div class="z-10 text-white">
-                        <div class="mono-label text-[11px] text-white/80 mb-1">ROUTED TO SMALL MODEL</div>
-                        <h3 class="text-xl font-medium tracking-tight text-white mb-1">High-Volume Agent Chat</h3>
-                        <p class="text-xs text-white/80 font-sans">Greeting, lookup, summarization and simple API invocation in 393ms.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Card 1: Factoid & Lookup -->
+                <div class="flex flex-col border border-paper-warm rounded-card overflow-hidden bg-white hover:border-paper-cool transition-all group">
+                    <div class="w-full h-64 art-swirl-1 art-grain"></div>
+                    <div class="p-6 flex flex-col flex-1">
+                        <div class="mono-label text-[11px] text-stone mb-2">TIER 01 / SMALL DISPATCH</div>
+                        <h3 class="serif-headline text-2xl mb-3">Factoid &amp; Fast Lookup</h3>
+                        <p class="text-sm text-stone leading-relaxed mb-6 flex-1">
+                            Simple questions, definitions, capitals, and single-turn retrievals require no frontier reasoning. Dispatched to low-cost small models for sub-second responses.
+                        </p>
+                        <button onclick="launchWithPrompt(0)" class="btn-ghost text-[11px] py-2 w-full justify-between">
+                            <span>RUN EXAMPLE QUERY</span>
+                            <span>&rarr;</span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Card 2: Code Architecture & SQL -->
-                <div onclick="launchWithPrompt(1)" class="art-swirl-2 art-grain rounded-card h-[280px] p-6 flex flex-col justify-between cursor-pointer transition-transform duration-200 hover:scale-[1.01] relative overflow-hidden group">
-                    <div class="z-10 flex justify-between items-start">
-                        <span class="mono-label text-[11px] text-white/90 bg-ink/30 backdrop-blur-md px-3 py-1 rounded-pill">
-                            02 CODE REASONING
-                        </span>
-                        <span class="mono-label text-[11px] text-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
-                            TEST &rarr;
-                        </span>
-                    </div>
-                    <div class="z-10 text-white">
-                        <div class="mono-label text-[11px] text-white/80 mb-1">ESCALATED TO FRONTIER</div>
-                        <h3 class="text-xl font-medium tracking-tight text-white mb-1">Complex System Architecture</h3>
-                        <p class="text-xs text-white/80 font-sans">Distributed algorithms, schema migrations, and high-stakes reasoning.</p>
-                    </div>
-                </div>
-
-                <!-- Card 3: System One Escalation Safeguard -->
-                <div onclick="launchWithPrompt(3)" class="art-swirl-3 art-grain rounded-card h-[280px] p-6 flex flex-col justify-between cursor-pointer transition-transform duration-200 hover:scale-[1.01] relative overflow-hidden group">
-                    <div class="z-10 flex justify-between items-start">
-                        <span class="mono-label text-[11px] text-white/90 bg-ink/30 backdrop-blur-md px-3 py-1 rounded-pill">
-                            03 SAFEGUARD TIER
-                        </span>
-                        <span class="mono-label text-[11px] text-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
-                            TEST &rarr;
-                        </span>
-                    </div>
-                    <div class="z-10 text-white">
-                        <div class="mono-label text-[11px] text-white/80 mb-1">CONFIDENCE ESCALATION</div>
-                        <h3 class="text-xl font-medium tracking-tight text-white mb-1">Low Confidence Fail-Safe</h3>
-                        <p class="text-xs text-white/80 font-sans">Decisions under 0.70 threshold automatically escalate to frontier.</p>
+                <!-- Card 2: Synthesis & Architecture -->
+                <div class="flex flex-col border border-paper-warm rounded-card overflow-hidden bg-white hover:border-paper-cool transition-all group">
+                    <div class="w-full h-64 art-swirl-2 art-grain"></div>
+                    <div class="p-6 flex flex-col flex-1">
+                        <div class="mono-label text-[11px] text-stone mb-2">TIER 02 / FRONTIER ESCALATION</div>
+                        <h3 class="serif-headline text-2xl mb-3">Distributed Architecture</h3>
+                        <p class="text-sm text-stone leading-relaxed mb-6 flex-1">
+                            Multi-agent consensus, distributed system tradeoffs, and complex architectural designs require deep frontier reasoning. Escalated with maximum confidence.
+                        </p>
+                        <button onclick="launchWithPrompt(1)" class="btn-ghost text-[11px] py-2 w-full justify-between">
+                            <span>RUN EXAMPLE QUERY</span>
+                            <span>&rarr;</span>
+                        </button>
                     </div>
                 </div>
 
+                <!-- Card 3: Code & Security Audit -->
+                <div class="flex flex-col border border-paper-warm rounded-card overflow-hidden bg-white hover:border-paper-cool transition-all group">
+                    <div class="w-full h-64 art-swirl-3 art-grain"></div>
+                    <div class="p-6 flex flex-col flex-1">
+                        <div class="mono-label text-[11px] text-stone mb-2">TIER 02 / FRONTIER ESCALATION</div>
+                        <h3 class="serif-headline text-2xl mb-3">Security &amp; Concurrency</h3>
+                        <p class="text-sm text-stone leading-relaxed mb-6 flex-1">
+                            Race condition debugging, memory leaks, and cryptographic analysis demand advanced frontier verification. Always routed to high-capacity frontier endpoints.
+                        </p>
+                        <button onclick="launchWithPrompt(2)" class="btn-ghost text-[11px] py-2 w-full justify-between">
+                            <span>RUN EXAMPLE QUERY</span>
+                            <span>&rarr;</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- Platform Section: Workflow Stadium Pills & 2-Column Feature Cards -->
-        <section id="platform" class="max-w-[1200px] mx-auto px-6 py-20 w-full">
-            <div class="text-center mb-10">
-                <span class="mono-label text-[11px] text-stone">003 PLATFORM</span>
-                <h2 class="serif-headline text-3xl sm:text-5xl mt-2 mb-6">How RouteRight Operates</h2>
-
-                <!-- Workflow Tab Pill Row (Stadium Shape: 9999px radius, Ink vs Inactive) -->
-                <div class="inline-flex flex-wrap items-center justify-center gap-2 p-1.5 bg-white border border-paper-warm rounded-pill">
-                    <button id="wf-tab-0" onclick="setWorkflowTab(0)" class="pill-tab pill-tab-active">01 ROUTE</button>
-                    <button id="wf-tab-1" onclick="setWorkflowTab(1)" class="pill-tab pill-tab-inactive">02 DECIDE</button>
-                    <button id="wf-tab-2" onclick="setWorkflowTab(2)" class="pill-tab pill-tab-inactive">03 EVALUATE</button>
-                    <button id="wf-tab-3" onclick="setWorkflowTab(3)" class="pill-tab pill-tab-inactive">04 SERVE</button>
+        <!-- Platform Mechanics -->
+        <section id="platform" class="border-t border-paper-warm py-24 bg-white">
+            <div class="max-w-[1200px] mx-auto px-6">
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-12 pb-4 border-b border-paper-warm gap-4">
+                    <div>
+                        <span class="mono-label text-[11px] text-stone">003 PLATFORM</span>
+                        <h2 class="serif-headline text-3xl sm:text-4xl mt-1">System 1 Routing Pipeline</h2>
+                    </div>
+                    <div class="text-right">
+                        <span class="mono-label text-[11px] text-stone">ZERO-COST LOCAL INFERENCE</span>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Feature Card (Background #edebe8 Paper Warm, 9px radius, soft 12px shadow) -->
-            <div id="workflow-feature-card" class="bg-paper-warm rounded-card p-8 md:p-12 shadow-editorial transition-all duration-200">
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-                    
-                    <!-- Left: Geometric Ink Icon / Constellation Illustration -->
-                    <div class="md:col-span-4 flex items-center justify-center">
-                        <div id="wf-icon-container" class="w-40 h-40 rounded-card bg-white flex items-center justify-center border border-paper-cool p-6">
-                            <!-- Geometric Monograph Illustration -->
-                            <svg class="w-24 h-24 text-ink" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="50" cy="50" r="38" stroke-dasharray="3 3"/>
-                                <circle cx="28" cy="40" r="6" fill="#272421"/>
-                                <circle cx="72" cy="40" r="6" fill="#272421"/>
-                                <circle cx="50" cy="74" r="7" fill="#272421"/>
-                                <path d="M28 40 L50 74 L72 40" stroke="#272421" stroke-width="2"/>
+                <!-- 4 Stadium Tabs -->
+                <div class="flex flex-wrap items-center gap-3 mb-10">
+                    <button onclick="selectWorkflowStage(0)" id="tab-0" class="pill-tab pill-tab-active">
+                        <span>STAGE 01 &middot; EVALUATION</span>
+                    </button>
+                    <button onclick="selectWorkflowStage(1)" id="tab-1" class="pill-tab pill-tab-inactive">
+                        <span>STAGE 02 &middot; THRESHOLD</span>
+                    </button>
+                    <button onclick="selectWorkflowStage(2)" id="tab-2" class="pill-tab pill-tab-inactive">
+                        <span>STAGE 03 &middot; DISPATCH</span>
+                    </button>
+                    <button onclick="selectWorkflowStage(3)" id="tab-3" class="pill-tab pill-tab-inactive">
+                        <span>STAGE 04 &middot; CHRONOGRAPH</span>
+                    </button>
+                </div>
+
+                <!-- Editorial Stage Details Panel -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center bg-paper-warm/50 border border-paper-warm rounded-card p-8 md:p-12">
+                    <div class="lg:col-span-8 flex flex-col justify-center">
+                        <span id="wf-step-label" class="mono-label text-[11px] text-stone mb-2">SYSTEM ONE LOCAL EVALUATION</span>
+                        <h3 id="wf-heading" class="serif-headline text-3xl md:text-4xl mb-4">Zero-Cloud-Cost Prompt Evaluation</h3>
+                        <p id="wf-body" class="text-base text-stone leading-relaxed font-sans max-w-xl">
+                            Operating locally on CPU or GPU with zero cloud API latency overhead during the routing step, Strands Decider 2B generates calibrated softmax probabilities across candidate model tiers. Operating cost is precisely $0.0000.
+                        </p>
+                    </div>
+                    <div class="lg:col-span-4 flex items-center justify-center p-6 border-l border-paper-warm">
+                        <div id="wf-icon-container" class="text-ink">
+                            <svg class="w-24 h-24 stroke-[1.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="9"/>
+                                <path d="M12 7v5l3 3"/>
                             </svg>
                         </div>
                     </div>
-
-                    <!-- Right: Typographic Content -->
-                    <div class="md:col-span-8 flex flex-col justify-center">
-                        <span id="wf-step-label" class="mono-label text-[11px] text-stone mb-2">001 STAGE: PRE-EXECUTION INTERCEPTION</span>
-                        <h3 id="wf-heading" class="serif-headline text-2xl sm:text-3xl text-ink mb-3 font-normal">
-                            Zero-Latency Decision Point
-                        </h3>
-                        <p id="wf-body" class="text-ink text-[15px] leading-relaxed mb-6 font-sans">
-                            Every agent invocation passes through a Strands Interceptor before reaching Amazon Bedrock. A lightweight 2B parameter classification model inspects the typed prompt syntax, query difficulty, and context requirements without generating textual tokens.
-                        </p>
-                        <div class="flex items-center gap-6 mono-label text-[11px] text-stone border-t border-paper-cool pt-4">
-                            <span>LATENCY: &lt; 5MS</span>
-                            <span>&middot;</span>
-                            <span>ACCURACY: 90.0%</span>
-                            <span>&middot;</span>
-                            <span>OVERHEAD: $0.00</span>
-                        </div>
-                    </div>
-
                 </div>
             </div>
         </section>
 
-        <!-- Free Setup Guide Section (Zero Cost Local Hosting) -->
-        <section id="free-guide" class="max-w-[1200px] mx-auto px-6 py-16 w-full">
-            <div class="border border-paper-warm rounded-card bg-white p-8 md:p-10 shadow-editorial">
-                <div class="flex flex-col sm:flex-row sm:items-start justify-between pb-6 mb-6 border-b border-paper-warm gap-4">
-                    <div>
-                        <div class="mono-label text-[11px] text-stone mb-1">004 ZERO CLOUD COST</div>
-                        <h2 class="serif-headline text-3xl font-normal">How to Run Decider 2B 100% Free</h2>
-                    </div>
-                    <span class="mono-label text-[11px] bg-paper-warm px-3.5 py-1.5 rounded-pill border border-paper-cool self-start sm:self-auto">
-                        APACHE-2.0 OPEN WEIGHTS
-                    </span>
+        <!-- Free Setup Guide Section -->
+        <section id="free-guide" class="border-t border-paper-warm py-20 bg-paper-warm/30">
+            <div class="max-w-[1200px] mx-auto px-6">
+                <div class="mb-8">
+                    <span class="mono-label text-[11px] text-stone">004 REPRODUCTION</span>
+                    <h2 class="serif-headline text-3xl sm:text-4xl mt-1">100% Free Local Setup</h2>
+                    <p class="text-sm text-stone max-w-xl mt-2 font-sans">
+                        You do not need cloud API credits to run or judge RouteRight. The Strands Decider 2B weights run completely free on your local hardware.
+                    </p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-[14px]">
-                    <div class="space-y-3 font-sans text-stone">
-                        <p class="text-ink">
-                            Strands Decider 2B is published with open weights under the Apache-2.0 license on Hugging Face. You do not need to pay for Bedrock or GPU servers to run decision routing.
-                        </p>
-                        <p>
-                            It runs comfortably on Apple Silicon (M1/M2/M3/M4) CPU or Metal in 4ms, consuming less than 3GB of RAM.
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-xs">
+                    <div class="bg-white border border-paper-warm rounded-card p-6">
+                        <div class="mono-label text-[11px] text-stone mb-3">COMMAND 01 / START LOCAL DECIDER SERVER</div>
+                        <div class="bg-paper-warm p-4 rounded-card text-ink overflow-x-auto select-all">
+                            strands-decider serve StrandsAgents/strands-decider-2B-hobson-v21 --port 8001
+                        </div>
+                        <p class="font-sans text-xs text-stone mt-3">
+                            Starts the real 2B parameter decision model on port 8001. Requires ~4GB RAM on CPU or GPU.
                         </p>
                     </div>
 
-                    <div class="bg-paper-warm rounded-card p-4 font-mono text-xs text-ink space-y-2 border border-paper-cool">
-                        <div class="mono-label text-[10px] text-stone mb-1">TERMINAL INSTRUCTIONS</div>
-                        <div class="bg-white p-2.5 rounded-card border border-paper-cool text-ink select-all">
-                            pip install strands-decider
+                    <div class="bg-white border border-paper-warm rounded-card p-6">
+                        <div class="mono-label text-[11px] text-stone mb-3">COMMAND 02 / LAUNCH ROUTERIGHT CONSOLE</div>
+                        <div class="bg-paper-warm p-4 rounded-card text-ink overflow-x-auto select-all">
+                            ROUTERIGHT_DECIDER_URL=http://127.0.0.1:8001 python -m routeright.cli start
                         </div>
-                        <div class="bg-white p-2.5 rounded-card border border-paper-cool text-ink select-all">
-                            strands-decider serve --model StrandsAgents/strands-decider-2B-hobson-v21 --port 8000
-                        </div>
+                        <p class="font-sans text-xs text-stone mt-3">
+                            Launches the RouteRight web interface on port 8000 connected directly to your local Decider engine.
+                        </p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Monograph Editorial Footer -->
-        <footer class="border-t border-paper-warm py-12 mt-auto bg-white">
-            <div class="max-w-[1200px] mx-auto px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 text-xs text-stone">
+        <!-- Monograph Footer -->
+        <footer class="border-t border-paper-warm py-12 bg-white">
+            <div class="max-w-[1200px] mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6 text-stone text-xs">
                 <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-1 text-ink">
+                    <div class="flex items-center gap-1.5 text-ink">
                         <span class="w-2 h-2 rounded-full bg-ink"></span>
                         <span class="w-2 h-2 rounded-full bg-ink"></span>
                         <span class="w-2 h-2 rounded-full bg-ink"></span>
                     </div>
-                    <span class="mono-label text-ink font-medium">Adaptive RouteRight</span>
+                    <span class="mono-label text-ink font-medium">RouteRight</span>
                     <span>/</span>
                     <span>Strands Decider 2B Hackathon</span>
                     <span>/</span>
                     <span class="mono-label">MIT License</span>
                 </div>
                 <div class="flex items-center gap-6 mono-label text-[11px]">
-                    <a href="javascript:void(0)" onclick="handleDashboardCta()" class="hover:text-ink transition-colors">DASHBOARD</a>
+                    <a href="javascript:void(0)" onclick="switchView('dashboard')" class="hover:text-ink transition-colors">DASHBOARD</a>
                     <a href="javascript:void(0)" onclick="openBenchmarkModal()" class="hover:text-ink transition-colors">BENCHMARK</a>
                     <span class="text-paper-cool">&bull;</span>
                     <span>ZERO-COST LOCAL INFERENCE</span>
@@ -556,7 +498,7 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- VIEW 2: INTERACTIVE DASHBOARD (Live Telemetry & Workstation)           -->
+    <!-- VIEW 2: INTERACTIVE DASHBOARD                                         -->
     <!-- ===================================================================== -->
     <div id="view-dashboard" class="hidden w-full flex-1 flex flex-col">
         
@@ -564,22 +506,20 @@
         <div class="bg-paper-warm border-b border-paper-cool py-2.5 px-6">
             <div class="max-w-[1200px] mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                 <div class="flex items-center gap-2">
-                    <span class="mono-label text-[11px] text-ink font-medium">SESSION:</span>
-                    <span id="dash-user-label" class="font-mono text-ink">Guest Developer</span>
+                    <span class="mono-label text-[11px] text-ink font-medium">ENGINE:</span>
+                    <span id="dash-decider-model-label" class="font-mono text-ink">Strands Decider 2B</span>
                     <span class="text-stone">/</span>
-                    <span class="mono-label text-[10px] text-stone">FREE LOCAL DECIDER 2B ACTIVE ($0.00/CALL)</span>
+                    <span id="dash-decider-device-label" class="mono-label text-[10px] text-stone">LOCAL INFERENCE ($0.00/DECISION)</span>
                 </div>
                 <div class="flex items-center gap-4 mono-label text-[11px]">
                     <a href="javascript:void(0)" onclick="switchView('landing')" class="text-stone hover:text-ink transition-colors">&larr; BACK TO LANDING</a>
-                    <span class="text-stone">|</span>
-                    <button onclick="handleSignOut()" class="text-stone hover:text-ink transition-colors">SIGN OUT</button>
                 </div>
             </div>
         </div>
 
         <main class="max-w-[1200px] mx-auto px-6 py-8 w-full flex-1 flex flex-col gap-8">
             
-            <!-- Live Savings Chronograph (Adaptive ML 3-Column Metric Box) -->
+            <!-- Live Savings Chronograph -->
             <section class="bg-paper-warm rounded-card p-6 md:p-8 shadow-editorial">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-paper-cool gap-2">
                     <div>
@@ -608,7 +548,7 @@
 
                     <div class="sm:border-l sm:border-paper-cool sm:pl-6">
                         <div class="mono-label text-[11px] text-stone mb-1.5">DECISION LATENCY</div>
-                        <div id="dash-avg-decision" class="font-serif text-3xl md:text-4xl text-ink font-normal tracking-tight">4.2ms</div>
+                        <div id="dash-avg-decision" class="font-serif text-3xl md:text-4xl text-ink font-normal tracking-tight">-</div>
                         <div class="text-xs text-stone mt-1.5 font-mono">Strands Decider 2B System 1</div>
                     </div>
 
@@ -629,54 +569,43 @@
                 </div>
             </section>
 
-            <!-- Interactive Workspace (Left: Chat Console, Right: System One Decision Feed) -->
+            <!-- Dual Console: Live Dispatch & System 1 Decision Feed -->
             <section class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 
-                <!-- Left: Interactive Chat Column -->
+                <!-- Left: Interactive Chat Workstation -->
                 <div class="lg:col-span-7 flex flex-col">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="mono-label text-[11px] text-stone">002 INTERACTIVE CONSOLE</span>
-                        <span class="mono-label text-[11px] text-stone">SELECT OR TYPE CUSTOM QUERY</span>
+                        <span class="mono-label text-[11px] text-stone">002 DISPATCH CONSOLE</span>
+                        <span class="mono-label text-[11px] text-stone">BEDROCK INFERENCE</span>
                     </div>
 
-                    <!-- Quick Sample Pills -->
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <button onclick="applySamplePrompt(0)" class="pill-tab pill-tab-inactive text-[11px] py-1.5 px-3">
-                            01 CAPITAL OF JAPAN (SIMPLE)
-                        </button>
-                        <button onclick="applySamplePrompt(1)" class="pill-tab pill-tab-inactive text-[11px] py-1.5 px-3">
-                            02 BYZANTINE GENERALS (COMPLEX)
-                        </button>
-                        <button onclick="applySamplePrompt(2)" class="pill-tab pill-tab-inactive text-[11px] py-1.5 px-3">
-                            03 CONVERT 72&deg;F (SIMPLE)
-                        </button>
-                        <button onclick="applySamplePrompt(3)" class="pill-tab pill-tab-inactive text-[11px] py-1.5 px-3">
-                            04 RAFT CONSENSUS (COMPLEX)
-                        </button>
-                    </div>
-
-                    <!-- Chat Messages Log -->
-                    <div id="chat-messages" class="border border-paper-warm rounded-card bg-white p-5 min-h-[340px] max-h-[460px] overflow-y-auto scrollbar-monograph flex flex-col gap-4 mb-4">
-                        <div class="text-center py-14 text-stone">
-                            <div class="mono-label text-[11px] text-stone mb-1">PROMPT DISPATCH READY</div>
-                            <p class="serif-headline text-xl text-ink font-normal mb-1">Enter a query to test dynamic routing.</p>
-                            <p class="text-xs text-stone max-w-sm mx-auto">Decider 2B evaluates complexity locally in ~4ms before Amazon Bedrock executes the selected model tier.</p>
+                    <div class="border border-paper-warm rounded-card bg-white flex flex-col min-h-[420px] max-h-[530px] overflow-hidden">
+                        <!-- Message History Scroll Area -->
+                        <div id="chat-messages" class="flex-1 p-6 overflow-y-auto scrollbar-monograph flex flex-col gap-4">
+                            <div class="text-center py-14 text-stone">
+                                <div class="mono-label text-[11px] text-stone mb-1">PROMPT DISPATCH READY</div>
+                                <p class="serif-headline text-xl text-ink font-normal mb-1">Enter a query to test dynamic routing.</p>
+                                <p class="text-xs text-stone max-w-sm mx-auto">Decider 2B evaluates complexity locally before Amazon Bedrock executes the selected model tier.</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Chat Input Box -->
-                    <div class="border border-paper-warm rounded-card p-2 bg-white flex gap-2 items-center focus-within:border-ink transition-colors">
-                        <input id="chat-input" type="text" placeholder="Ask a question or enter a query..."
-                            class="flex-1 bg-transparent px-3 py-2 text-[14px] text-ink placeholder-stone focus:outline-none font-sans"
-                            onkeydown="if(event.key==='Enter')sendMessage()">
-                        <button onclick="sendMessage()" id="send-btn" class="btn-ink text-[11px] py-2.5 px-5 flex items-center gap-1.5 shrink-0">
-                            <span>SEND</span>
-                            <span>&rarr;</span>
-                        </button>
+                        <!-- Prompt Input Area -->
+                        <div class="p-4 border-t border-paper-warm bg-white">
+                            <form onsubmit="event.preventDefault(); sendMessage();" class="flex gap-2">
+                                <input id="chat-input" type="text" placeholder="Ask a question or input a technical prompt..."
+                                    class="flex-1 bg-paper-warm/50 border border-paper-warm rounded-card px-4 py-2.5 text-sm text-ink placeholder:text-stone/60 focus:outline-none focus:border-ink font-sans transition-colors">
+                                <button id="send-btn" type="submit" class="btn-ink text-[12px] py-2.5 px-5">
+                                    <span>ROUTE &rarr;</span>
+                                </button>
+                            </form>
+                            <div class="flex items-center justify-between mt-2 pt-1 text-[11px] text-stone mono-label">
+                                <span>Try: "What is 15 * 8?" vs "Implement a Raft consensus log compaction"</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Right: Real-time Decision Feed -->
+                <!-- Right: System 1 Decision Log -->
                 <div class="lg:col-span-5 flex flex-col">
                     <div class="flex items-center justify-between mb-3">
                         <span class="mono-label text-[11px] text-stone">003 SYSTEM ONE DECISIONS</span>
@@ -696,45 +625,7 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- MODAL: SIGN-IN / SIGN-UP (Visitor Registration & Tracking)             -->
-    <!-- ===================================================================== -->
-    <div id="auth-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4">
-        <div class="bg-white rounded-card max-w-md w-full p-8 border border-paper-warm shadow-editorial animate-fade-in relative">
-            <button onclick="closeAuthModal()" class="absolute top-6 right-6 text-stone hover:text-ink text-2xl font-serif leading-none" title="Close">&times;</button>
-            
-            <div class="mono-label text-[11px] text-stone mb-2">001 DEVELOPER SESSION</div>
-            <h2 class="serif-headline text-3xl font-normal text-ink mb-2">Welcome to RouteRight</h2>
-            <p class="text-xs text-stone mb-6 font-sans">
-                Sign in to access the live routing workstation. We track registered builders and real telemetry locally.
-            </p>
-
-            <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
-                <div>
-                    <label class="mono-label text-[11px] text-stone block mb-1.5">FULL NAME</label>
-                    <input id="auth-name" type="text" placeholder="e.g. Alex Vance"
-                        class="w-full bg-paper-warm/50 border border-paper-warm rounded-card px-3.5 py-2.5 text-sm text-ink placeholder:text-stone/60 focus:outline-none focus:border-ink font-sans">
-                </div>
-
-                <div>
-                    <label class="mono-label text-[11px] text-stone block mb-1.5">WORK EMAIL</label>
-                    <input id="auth-email" type="email" placeholder="alex@company.com"
-                        class="w-full bg-paper-warm/50 border border-paper-warm rounded-card px-3.5 py-2.5 text-sm text-ink placeholder:text-stone/60 focus:outline-none focus:border-ink font-sans">
-                </div>
-
-                <div class="pt-2 flex flex-col gap-2.5">
-                    <button type="submit" class="btn-ink w-full py-3 text-[12px]">
-                        ENTER WORKSTATION &rarr;
-                    </button>
-                    <button type="button" onclick="continueAsGuest()" class="btn-ghost w-full py-2.5 text-[12px]">
-                        CONTINUE AS GUEST DEVELOPER
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- ===================================================================== -->
-    <!-- MODAL: 50-QUERY BENCHMARK RUNNER (Empirical Evaluation Matrix)         -->
+    <!-- MODAL: 50-QUERY BENCHMARK RUNNER                                      -->
     <!-- ===================================================================== -->
     <div id="benchmark-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4">
         <div class="bg-white rounded-card max-w-3xl w-full max-h-[85vh] overflow-y-auto scrollbar-monograph p-8 border border-paper-warm shadow-editorial animate-fade-in relative">
@@ -756,44 +647,41 @@
     <!-- JAVASCRIPT APPLICATION LOGIC                                          -->
     <!-- ===================================================================== -->
     <script>
-        let currentUser = null;
         let messageCount = 0;
 
         const SAMPLE_PROMPTS = [
             "What is the capital of Japan?",
-            "Explain the Byzantine Generals Problem and how practical Byzantine Fault Tolerance addresses it.",
-            "Convert 72 degrees Fahrenheit to Celsius.",
-            "Explain how consensus algorithms like Raft work. Walk through a leader election scenario with five nodes."
+            "Explain how Paxos handles network partitions in a 5-node cluster with formal proofs.",
+            "Analyze potential race conditions in a double-checked locking singleton pattern in C++."
         ];
 
         const WORKFLOW_STAGES = [
             {
-                step: "001 STAGE: PRE-EXECUTION INTERCEPTION",
-                heading: "Zero-Latency Decision Point",
-                body: "Every agent invocation passes through a Strands Interceptor before reaching Amazon Bedrock. A lightweight 2B parameter classification model inspects the prompt syntax, query difficulty, and context requirements without generating textual tokens.",
-                iconSvg: `<svg class="w-24 h-24 text-ink" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><circle cx="50" cy="50" r="38" stroke-dasharray="3 3"/><circle cx="28" cy="40" r="6" fill="#272421"/><circle cx="72" cy="40" r="6" fill="#272421"/><circle cx="50" cy="74" r="7" fill="#272421"/><path d="M28 40 L50 74 L72 40" stroke="#272421" stroke-width="2"/></svg>`
+                step: "STAGE 01 / SYSTEM ONE LOCAL EVALUATION",
+                heading: "Zero-Cloud-Cost Prompt Evaluation",
+                body: "Operating locally on CPU or GPU with zero cloud API latency overhead during the routing step, Strands Decider 2B generates calibrated softmax probabilities across candidate model tiers. Operating cost is precisely $0.0000.",
+                iconSvg: `<svg class="w-24 h-24 stroke-[1.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`
             },
             {
-                step: "002 STAGE: STRANDS DECIDER 2B INFERENCE",
-                heading: "Local System One Evaluation",
-                body: "Operating on CPU or GPU at 4.2ms P50 latency, Strands Decider 2B generates calibrated softmax probabilities across candidate model tiers. Zero cloud API calls are made during the routing step, keeping operating cost at precisely $0.0000.",
-                iconSvg: `<svg class="w-24 h-24 text-ink" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><rect x="22" y="22" width="56" height="56" rx="6"/><path d="M36 50 H64 M50 36 V64"/><circle cx="50" cy="50" r="8" fill="#272421"/></svg>`
+                step: "STAGE 02 / CONFIDENCE ESCALATION",
+                heading: "Strict Threshold Routing Policy",
+                body: "Only prompts where Decider 2B classifies as 'small' with confidence >= 0.70 are routed to the small model tier. Any ambiguous, borderline, or difficult prompts automatically escalate to the frontier model.",
+                iconSvg: `<svg class="w-24 h-24 stroke-[1.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>`
             },
             {
-                step: "003 STAGE: QUALITY SAFEGUARD ESCALATION",
-                heading: "Confidence Thresholding",
-                body: "If Decider confidence falls below 0.70, RouteRight triggers an automatic escalation rule: any borderline or ambiguous query is routed to the frontier model tier. Quality and accuracy are never compromised for cost savings.",
-                iconSvg: `<svg class="w-24 h-24 text-ink" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><polygon points="50,20 85,80 15,80"/><line x1="50" y1="42" x2="50" y2="60" stroke-width="3"/><circle cx="50" cy="70" r="2" fill="#272421"/></svg>`
+                step: "STAGE 03 / BEDROCK DISPATCH",
+                heading: "Converse API Execution",
+                body: "The selected model tier is invoked through Amazon Bedrock. In decision-only mode, RouteRight displays routing and confidence without making Bedrock calls.",
+                iconSvg: `<svg class="w-24 h-24 stroke-[1.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`
             },
             {
-                step: "004 STAGE: AMAZON BEDROCK DISPATCH",
-                heading: "Execution & Real Telemetry",
-                body: "Amazon Bedrock invokes the chosen model (e.g. Claude 3 Haiku for simple lookups, Claude 3.7 Sonnet for complex reasoning). Real token counts, wall-clock latencies, and dollar savings are reported back to the live chronograph.",
-                iconSvg: `<svg class="w-24 h-24 text-ink" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 70 L50 25 L80 70 Z"/><path d="M50 25 V85"/><circle cx="50" cy="85" r="4" fill="#272421"/></svg>`
+                step: "STAGE 04 / SAVINGS CHRONOGRAPH",
+                heading: "Empirical Spend Auditing",
+                body: "Every turn calculates real token consumption and costs according to published AWS pricing. Cumulative savings and latency gains are displayed in real-time.",
+                iconSvg: `<svg class="w-24 h-24 stroke-[1.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>`
             }
         ];
 
-        // View Management
         function switchView(viewName) {
             const landing = document.getElementById('view-landing');
             const dashboard = document.getElementById('view-dashboard');
@@ -802,16 +690,15 @@
             if (viewName === 'dashboard') {
                 landing.classList.add('hidden');
                 dashboard.classList.remove('hidden');
-                ctaBtn.innerHTML = `<span>GO TO LANDING</span> &rarr;`;
-                ctaBtn.onclick = () => switchView('landing');
+                if (ctaBtn) ctaBtn.style.display = 'none';
                 window.location.hash = '#/dashboard';
                 updateSavings();
             } else {
                 dashboard.classList.add('hidden');
                 landing.classList.remove('hidden');
-                ctaBtn.innerHTML = `<span>LAUNCH DASHBOARD</span> <span class="text-xs">&rarr;</span>`;
-                ctaBtn.onclick = handleDashboardCta;
+                if (ctaBtn) ctaBtn.style.display = 'inline-flex';
                 window.location.hash = '#/';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
@@ -820,10 +707,9 @@
             if (el) el.scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Workflow Tabs
-        function setWorkflowTab(index) {
+        function selectWorkflowStage(index) {
             for (let i = 0; i < 4; i++) {
-                const tab = document.getElementById(`wf-tab-${i}`);
+                const tab = document.getElementById(`tab-${i}`);
                 if (tab) {
                     if (i === index) {
                         tab.className = 'pill-tab pill-tab-active';
@@ -842,95 +728,9 @@
             }
         }
 
-        // Authentication & Visitor Tracking
-        function handleDashboardCta() {
-            if (currentUser) {
-                switchView('dashboard');
-            } else {
-                openAuthModal();
-            }
-        }
-
-        function openAuthModal() {
-            document.getElementById('auth-modal').classList.remove('hidden');
-        }
-
-        function closeAuthModal() {
-            document.getElementById('auth-modal').classList.add('hidden');
-        }
-
-        async function handleAuthSubmit(e) {
-            e.preventDefault();
-            const name = document.getElementById('auth-name').value.trim();
-            const email = document.getElementById('auth-email').value.trim();
-
-            await registerUser(name, email);
-            closeAuthModal();
-            switchView('dashboard');
-        }
-
-        async function continueAsGuest() {
-            await registerUser("Guest Developer", "");
-            closeAuthModal();
-            switchView('dashboard');
-        }
-
-        async function registerUser(name, email) {
-            try {
-                const res = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email }),
-                });
-                const data = await res.json();
-                if (data.status === 'ok') {
-                    currentUser = data.user;
-                    localStorage.setItem('routeright_user', JSON.stringify(currentUser));
-                    updateUserDisplay();
-                    fetchUserStats();
-                }
-            } catch (err) {
-                console.error("Auth registration error:", err);
-                currentUser = { name: name || "Developer", email: email || "guest@local", id: "usr_guest" };
-                updateUserDisplay();
-            }
-        }
-
-        function updateUserDisplay() {
-            if (currentUser) {
-                const label = document.getElementById('dash-user-label');
-                if (label) {
-                    label.textContent = `${currentUser.name} (#${currentUser.visitor_number || 1})`;
-                }
-            }
-        }
-
-        function handleSignOut() {
-            localStorage.removeItem('routeright_user');
-            currentUser = null;
-            switchView('landing');
-        }
-
-        async function fetchUserStats() {
-            try {
-                const res = await fetch('/api/stats/users');
-                const data = await res.json();
-                const count = data.total_visitors || 18;
-                const el = document.getElementById('nav-visitor-count');
-                if (el) el.textContent = `${count} BUILDERS TRACKED`;
-            } catch (err) {
-                console.debug("User stats fetch skipped:", err);
-            }
-        }
-
-        // Quick Launch from Landing Page Cards
         function launchWithPrompt(idx) {
-            if (!currentUser) {
-                openAuthModal();
-            } else {
-                switchView('dashboard');
-                applySamplePrompt(idx);
-            }
+            switchView('dashboard');
+            applySamplePrompt(idx);
         }
 
         function applySamplePrompt(idx) {
@@ -941,7 +741,6 @@
             }
         }
 
-        // Live Chat Message Execution
         async function sendMessage() {
             const input = document.getElementById('chat-input');
             const message = input.value.trim();
@@ -957,10 +756,7 @@
                 const res = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message,
-                        user_id: currentUser ? currentUser.id : null
-                    }),
+                    body: JSON.stringify({ message }),
                 });
                 const data = await res.json();
 
@@ -1074,7 +870,6 @@
             panel.insertBefore(card, panel.firstChild);
         }
 
-        // Live Telemetry Updates
         async function updateSavings() {
             try {
                 const res = await fetch('/api/savings');
@@ -1083,7 +878,7 @@
                 const totalQueries = s.total_decisions || 0;
                 const costSaved = '$' + (s.cost_saved_usd || 0).toFixed(4);
                 const pctSaved = (s.percent_cost_saved || 0).toFixed(1) + '%';
-                const avgDecision = (s.avg_decision_latency_ms || 4.2).toFixed(1) + 'ms';
+                const avgDecision = s.avg_decision_latency_ms > 0 ? (s.avg_decision_latency_ms).toFixed(1) + 'ms' : '-';
 
                 const totalQueriesEl = document.getElementById('dash-total-queries');
                 if (totalQueriesEl) totalQueriesEl.textContent = `${totalQueries} QUERIES EVALUATED`;
@@ -1121,7 +916,7 @@
                 <div class="text-center py-14 text-stone">
                     <div class="mono-label text-[11px] text-stone mb-1">PROMPT DISPATCH READY</div>
                     <p class="serif-headline text-xl text-ink font-normal mb-1">Enter a query to test dynamic routing.</p>
-                    <p class="text-xs text-stone max-w-sm mx-auto">Decider 2B evaluates complexity locally in ~4ms before Amazon Bedrock executes the selected model tier.</p>
+                    <p class="text-xs text-stone max-w-sm mx-auto">Decider 2B evaluates complexity locally before Amazon Bedrock executes the selected model tier.</p>
                 </div>`;
             document.getElementById('decisions-panel').innerHTML = `
                 <div class="text-center py-20 text-stone">
@@ -1131,7 +926,7 @@
             
             document.getElementById('dash-cost-saved').textContent = '$0.0000';
             document.getElementById('dash-pct-saved').textContent = '0%';
-            document.getElementById('dash-avg-decision').textContent = '4.2ms';
+            document.getElementById('dash-avg-decision').textContent = '-';
             document.getElementById('dash-total-queries').textContent = '0 QUERIES EVALUATED';
             document.getElementById('dash-small-bar').style.width = '0%';
             document.getElementById('dash-frontier-bar').style.width = '100%';
@@ -1139,17 +934,71 @@
             document.getElementById('dash-frontier-pct').textContent = '100%';
         }
 
-        // Benchmark Runner Modal & SSE Streaming
         function openBenchmarkModal() {
             document.getElementById('benchmark-modal').classList.remove('hidden');
-            runBenchmark();
+            showBenchmarkConfirmation();
         }
 
         function closeBenchmarkModal() {
             document.getElementById('benchmark-modal').classList.add('hidden');
         }
 
-        async function runBenchmark() {
+        function showBenchmarkConfirmation() {
+            const content = document.getElementById('benchmark-content');
+            content.innerHTML = `
+                <div class="py-6 space-y-6">
+                    <div class="bg-paper-warm border border-paper-cool rounded-card p-5">
+                        <div class="mono-label text-[11px] text-ink font-medium mb-2">BENCHMARK EXECUTION PROTOCOL</div>
+                        <p class="text-sm text-stone leading-relaxed mb-4">
+                            The benchmark evaluates 50 curated prompts across three independent modes:
+                            <strong>RouteRight (Dynamic)</strong>, <strong>Always Frontier</strong>, and <strong>Always Small</strong>.
+                        </p>
+                        <div class="space-y-1.5 text-xs font-mono text-stone border-t border-paper-cool pt-3">
+                            <div class="flex justify-between">
+                                <span>Total Evaluations:</span>
+                                <span class="text-ink">150 queries (3 modes &times; 50 questions)</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Estimated Bedrock Spend:</span>
+                                <span class="text-ink">~$0.22 (Decision-Only / Cache: $0.0000)</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Hardware Evaluator:</span>
+                                <span class="text-ink">Strands Decider 2B local System 1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button onclick="loadCachedBenchmark()" class="btn-ink flex-1 py-3 text-[12px]">
+                            <span>LOAD VERIFIED RESULTS CACHE</span>
+                            <span>&rarr;</span>
+                        </button>
+                        <button onclick="runBenchmarkLive()" class="btn-ghost flex-1 py-3 text-[12px]">
+                            <span>RUN LIVE STREAMING RUN</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadCachedBenchmark() {
+            const content = document.getElementById('benchmark-content');
+            content.innerHTML = `<div class="py-12 text-center text-xs mono-label text-stone">LOADING CACHED EMPIRICAL BENCHMARK...</div>`;
+            try {
+                const res = await fetch('/api/benchmark', { method: 'POST' });
+                const data = await res.json();
+                if (data.error) {
+                    content.innerHTML = `<div class="text-stone text-xs mono-label">Error: ${data.error}</div>`;
+                } else {
+                    renderBenchmarkResults(data, content);
+                }
+            } catch (err) {
+                content.innerHTML = `<div class="text-stone text-xs mono-label">Error loading cache: ${err.message}</div>`;
+            }
+        }
+
+        async function runBenchmarkLive() {
             const content = document.getElementById('benchmark-content');
 
             content.innerHTML = `
@@ -1212,18 +1061,7 @@
 
                 eventSource.onerror = () => {
                     eventSource.close();
-                    fetch('/api/benchmark', { method: 'POST' })
-                        .then(r => r.json())
-                        .then(data => {
-                            if (data.error) {
-                                content.innerHTML = `<div class="text-stone text-xs mono-label">Error: ${data.error}</div>`;
-                            } else {
-                                renderBenchmarkResults(data, content);
-                            }
-                        })
-                        .catch(e => {
-                            content.innerHTML = `<div class="text-stone text-xs mono-label">Error: ${e.message}</div>`;
-                        });
+                    loadCachedBenchmark();
                 };
             } catch (err) {
                 content.innerHTML = `<div class="text-stone text-xs mono-label">Error: ${err.message}</div>`;
@@ -1272,7 +1110,7 @@
 
             html += `</div></div>`;
 
-            // Cost comparison bars (editorial monochrome)
+            // Cost comparison bars
             const costs = modes.map(m => data[m]?.summary?.total_cost_usd || 0);
             const maxCost = Math.max(...costs, 0.000001);
 
@@ -1296,7 +1134,7 @@
             });
             html += `</div></div>`;
 
-            // Misrouted Questions disclosure
+            // Borderline Escalations Audit
             const rrMisrouted = data.routeright?.summary?.misrouted || [];
             if (rrMisrouted.length > 0) {
                 html += `
@@ -1320,6 +1158,14 @@
                 html += `</div></div>`;
             }
 
+            html += `
+                <div class="pt-4 border-t border-paper-warm flex justify-end">
+                    <button onclick="showBenchmarkConfirmation()" class="btn-ghost text-[11px] py-1.5 px-3">
+                        &larr; RUN NEW BENCHMARK
+                    </button>
+                </div>
+            `;
+
             container.innerHTML = html;
         }
 
@@ -1333,29 +1179,36 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeBenchmarkModal();
-                closeAuthModal();
             }
         });
 
         // App Initialization
         window.addEventListener('DOMContentLoaded', () => {
-            const saved = localStorage.getItem('routeright_user');
-            if (saved) {
-                try {
-                    currentUser = JSON.parse(saved);
-                    updateUserDisplay();
-                } catch (e) {
-                    currentUser = null;
-                }
-            }
-
-            if (window.location.hash === '#/dashboard' && currentUser) {
+            if (window.location.hash === '#/dashboard') {
                 switchView('dashboard');
             } else {
                 switchView('landing');
             }
 
-            fetchUserStats();
+            // Check system status & simulation banner
+            fetch('/api/status')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.is_simulated) {
+                        const banner = document.getElementById('simulated-banner');
+                        if (banner) banner.classList.remove('hidden');
+                    }
+                    if (data.decider_model) {
+                        const mLabel = document.getElementById('dash-decider-model-label');
+                        if (mLabel) mLabel.textContent = data.decider_model.split('/').pop();
+                    }
+                    if (data.decider_device) {
+                        const dLabel = document.getElementById('dash-decider-device-label');
+                        if (dLabel) dLabel.textContent = `${data.decider_device.toUpperCase()} INFERENCE ($0.00/DECISION)`;
+                    }
+                })
+                .catch(err => console.debug("Status fetch skipped:", err));
+
             updateSavings();
         });
     </script>

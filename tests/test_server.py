@@ -1,4 +1,4 @@
-"""Tests for FastAPI server endpoints in mock mode."""
+"""Tests for FastAPI server endpoints in mock/test mode."""
 
 import pytest
 from fastapi.testclient import TestClient
@@ -50,22 +50,12 @@ def test_reset_endpoint(client):
     assert res.json() == {"status": "ok"}
 
 
-def test_auth_register_and_stats(client):
-    # Register test user
-    res = client.post("/api/auth/register", json={"name": "Alice Tester", "email": "alice@test.org"})
-    assert res.status_code == 200
-    data = res.json()
-    assert data["status"] == "ok"
-    assert "user" in data
-    assert data["user"]["name"] == "Alice Tester"
-    assert "visitor_number" in data["user"]
-
-    # Check stats endpoint
+def test_no_personal_data_collection(client):
+    """Verify that visitor tracking and auth endpoints are removed."""
+    res_reg = client.post("/api/auth/register", json={"name": "Alice"})
+    assert res_reg.status_code == 404
     res_stats = client.get("/api/stats/users")
-    assert res_stats.status_code == 200
-    stats = res_stats.json()
-    assert "total_visitors" in stats
-    assert stats["total_visitors"] >= 1
+    assert res_stats.status_code == 404
 
 
 def test_status_endpoint(client):
@@ -73,4 +63,6 @@ def test_status_endpoint(client):
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "online"
-    assert data["free_mode"] is True
+    assert "architecture" in data
+    assert "is_simulated" in data
+    assert "decider_model" in data

@@ -2,9 +2,9 @@
 
 ## Overview
 
-RouteRight is a drop-in decision pattern for Strands agents that intercepts prompts before every LLM invocation. By using Strands Decider 2B (a calibrated 2B parameter decision model that outputs probabilities and confidence without generating text), RouteRight dynamically routes easy requests to efficient small models and complex requests to frontier models on Amazon Bedrock.
+RouteRight is a drop-in decision pattern for Strands agents that intercepts prompts before every LLM invocation. By using Strands Decider 2B (a calibrated 2B parameter decision model that outputs probabilities and confidence without generating conversational text), RouteRight dynamically routes easy requests to efficient small models and complex requests to frontier models on Amazon Bedrock.
 
-Low-confidence decisions always escalate to the frontier model, ensuring response quality is never compromised.
+Low-confidence decisions always escalate to the frontier model, ensuring hard questions escalate to the frontier model.
 
 ---
 
@@ -17,17 +17,48 @@ Low-confidence decisions always escalate to the frontier model, ensuring respons
 - **Option Set**: `["small", "frontier"]`
 
 ### System One vs System Two Separation
-- **System One (Decider 2B)**: Runs locally on CPU/GPU in ~3-6 ms. Produces a calibrated probability distribution and confidence score. It never generates conversational text.
-- **System Two (Amazon Bedrock)**: Runs the selected model (e.g., Claude 3 Haiku / Nova Micro for small tier; Claude 3.7 Sonnet for frontier tier) to generate the actual response.
+- **System One (Decider 2B)**: Runs locally on CPU/GPU. Produces a calibrated probability distribution and confidence score. It never generates conversational text.
+- **System Two (Amazon Bedrock)**: Runs the selected model (e.g., Amazon Nova Micro for small tier; Claude 3.7 Sonnet for frontier tier) to generate the actual response.
 
 ---
 
 ## Strands Agent Wiring
 
-RouteRight supports two Strands integration mechanisms:
+RouteRight implements the official Strands `RoutingStrategy` interface for native integration with `strands.models.ModelRouter`:
 
-### 1. HookProvider Pattern (Recommended for dynamic model swapping)
-Intercepts `BeforeModelInvocationEvent` and swaps `event.agent.model` directly before Bedrock is invoked:
+### 1. Native ModelRouter Pattern (Primary)
+Wrap your candidate Bedrock models into `RoutingCandidate` instances, pair them with `DeciderRoutingStrategy`, and pass the resulting `ModelRouter` directly into your Strands `Agent`:
+
+```python
+from strands import Agent
+from strands.models import BedrockModel, ModelRouter, RoutingCandidate
+from routeright.pattern import DeciderRoutingStrategy
+
+# 1. Define candidate Amazon Bedrock models
+frontier_model = BedrockModel(model_id="us.anthropic.claude-3-7-sonnet-20250219-v1:0", region_name="us-east-1")
+small_model = BedrockModel(model_id="amazon.nova-micro-v1:0", region_name="us-east-1")
+
+# 2. Wrap into RoutingCandidate instances
+cand_frontier = RoutingCandidate(model=frontier_model, name="frontier", metadata={"tier": "frontier"})
+cand_small = RoutingCandidate(model=small_model, name="small", metadata={"tier": "small"})
+
+# 3. Create ModelRouter with DeciderRoutingStrategy
+strategy = DeciderRoutingStrategy(confidence_threshold=0.70)
+router = ModelRouter(models=[cand_frontier, cand_small], strategy=strategy)
+
+# 4. Instantiate a real Strands Agent
+agent = Agent(model=router)
+
+response = agent("What is the capital of Japan?")
+```
+
+### 2. Resilient Failover Protocol
+`DeciderRoutingStrategy` complies strictly with the Strands routing lifecycle:
+- Returns one of the context's own candidate instances.
+- After any model invocation failure (`context.attempts` non-empty), it delegates directly to `FallbackStrategy` to select the next healthiest available candidate.
+
+### 3. Alternative: HookProvider Pattern
+For existing agents that do not use `ModelRouter`, RouteRight provides a hook provider:
 
 ```python
 from strands import Agent
@@ -36,16 +67,6 @@ from routeright.pattern import RouteRightPattern
 pattern = RouteRightPattern()
 agent = Agent(model="us.anthropic.claude-3-7-sonnet-20250219-v1:0")
 pattern.attach(agent)
-```
-
-### 2. InterventionHandler Pattern (Recommended for guardrails and audit pipelines)
-Implements Strands `InterventionHandler` to inspect state and attach decision metadata:
-
-```python
-from routeright.pattern import RouteRightInterventionHandler
-
-handler = RouteRightInterventionHandler()
-# Register handler in Strands intervention pipeline
 ```
 
 ---
@@ -65,7 +86,7 @@ The confidence threshold (`ROUTERIGHT_CONFIDENCE_THRESHOLD`, default `0.70`) con
 | Decider Choice | Decider Confidence | Threshold | Route Result | Rationale |
 |----------------|--------------------|-----------|--------------|-----------|
 | `small` | 0.88 | 0.70 | **Small Model** | Clear simple query, high confidence. |
-| `small` | 0.63 | 0.70 | **Frontier Model** | Low confidence safety escalation. Quality protected. |
+| `small` | 0.63 | 0.70 | **Frontier Model** | Low confidence safety escalation. Hard questions escalate to frontier. |
 | `frontier` | 0.94 | 0.70 | **Frontier Model** | Complex query, needs frontier reasoning. |
 | `frontier` | 0.58 | 0.70 | **Frontier Model** | Uncertain complexity, always defaults to safety. |
 | Any failure | 0.00 | Any | **Frontier Model** | Network error or timeout defaults to frontier. |

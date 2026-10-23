@@ -10,7 +10,7 @@ import time
 from typing import Any
 
 from routeright.config import RouterConfig
-from routeright.decider import BaseDeciderClient, MockDeciderClient
+from routeright.decider import BaseDeciderClient, DeciderClient
 from routeright.router import RouteRightRouter
 
 logger = logging.getLogger("routeright.hook")
@@ -42,9 +42,9 @@ class RouteRightHook:
 
         if decider is None:
             if self.config.mock_mode:
+                from tests.fakes.decider import MockDeciderClient
                 decider = MockDeciderClient(randomize=True)
             else:
-                from routeright.decider import DeciderClient
                 decider = DeciderClient(
                     model_id=self.config.decider_model_id,
                     device=self.config.decider_device,
@@ -138,10 +138,9 @@ def create_router(
     config = config or RouterConfig()
 
     if config.mock_mode:
-        from routeright.decider import MockDeciderClient
+        from tests.fakes.decider import MockDeciderClient
         decider = MockDeciderClient(randomize=True)
     else:
-        from routeright.decider import DeciderClient
         decider = DeciderClient(
             model_id=config.decider_model_id,
             device=config.decider_device,

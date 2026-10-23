@@ -40,7 +40,7 @@ class RouterConfig:
         default_factory=lambda: os.getenv("ROUTERIGHT_DECIDER_DEVICE", "cpu")
     )
     decider_url: str | None = field(
-        default_factory=lambda: os.getenv("ROUTERIGHT_DECIDER_URL")
+        default_factory=lambda: os.getenv("ROUTERIGHT_DECIDER_URL", "http://127.0.0.1:8001")
     )
 
     # Router behavior
@@ -50,6 +50,9 @@ class RouterConfig:
     max_tokens: int = field(
         default_factory=lambda: int(os.getenv("ROUTERIGHT_MAX_TOKENS", "1024"))
     )
+    daily_usd_cap: float = field(
+        default_factory=lambda: float(os.getenv("ROUTERIGHT_DAILY_USD_CAP", "5.0"))
+    )
 
     # Mock mode
     mock_mode: bool = field(
@@ -57,5 +60,5 @@ class RouterConfig:
     )
 
     # Server
-    host: str = field(default_factory=lambda: os.getenv("ROUTERIGHT_HOST", "0.0.0.0"))
-    port: int = field(default_factory=lambda: int(os.getenv("ROUTERIGHT_PORT", "8080")))
+    host: str = field(default_factory=lambda: os.getenv("ROUTERIGHT_HOST", "127.0.0.1"))
+    port: int = field(default_factory=lambda: int(os.getenv("ROUTERIGHT_PORT", "8000")))
