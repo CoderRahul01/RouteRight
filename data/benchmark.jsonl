@@ -1,0 +1,50 @@
+{"id": 1, "question": "What is the capital of Japan?", "label": "small"}
+{"id": 2, "question": "Convert 72 degrees Fahrenheit to Celsius.", "label": "small"}
+{"id": 3, "question": "List the days of the week.", "label": "small"}
+{"id": 4, "question": "What year did World War II end?", "label": "small"}
+{"id": 5, "question": "Rewrite this sentence in past tense: She walks to the store.", "label": "small"}
+{"id": 6, "question": "What is the chemical symbol for gold?", "label": "small"}
+{"id": 7, "question": "How many continents are there?", "label": "small"}
+{"id": 8, "question": "Capitalize the first letter of each word: hello world from python.", "label": "small"}
+{"id": 9, "question": "What is 15% of 200?", "label": "small"}
+{"id": 10, "question": "Name three primary colors.", "label": "small"}
+{"id": 11, "question": "What is the boiling point of water in Celsius?", "label": "small"}
+{"id": 12, "question": "Reverse the string: hello.", "label": "small"}
+{"id": 13, "question": "Who wrote Romeo and Juliet?", "label": "small"}
+{"id": 14, "question": "Convert 5 kilometers to miles.", "label": "small"}
+{"id": 15, "question": "What is the plural of mouse?", "label": "small"}
+{"id": 16, "question": "How many hours are in a day?", "label": "small"}
+{"id": 17, "question": "What does HTML stand for?", "label": "small"}
+{"id": 18, "question": "Sort these numbers ascending: 5, 2, 8, 1, 9.", "label": "small"}
+{"id": 19, "question": "What color do you get when you mix red and blue?", "label": "small"}
+{"id": 20, "question": "Define the word ephemeral in one sentence.", "label": "small"}
+{"id": 21, "question": "What is the square root of 144?", "label": "small"}
+{"id": 22, "question": "Name the largest ocean on Earth.", "label": "small"}
+{"id": 23, "question": "Translate 'hello' to Spanish.", "label": "small"}
+{"id": 24, "question": "Remove all vowels from the word 'education'.", "label": "small"}
+{"id": 25, "question": "What programming language is known for its use in data science alongside R?", "label": "small"}
+{"id": 26, "question": "Explain the difference between TCP and UDP protocols, including when you would choose each one and the trade-offs involved in real-time applications.", "label": "frontier"}
+{"id": 27, "question": "Debug this Python code that should return the second largest element but returns the wrong result:\ndef second_largest(lst):\n    lst.sort()\n    return lst[-1]", "label": "frontier"}
+{"id": 28, "question": "Design a database schema for a ride-sharing application that handles drivers, riders, trips, payments, and ratings. Include the relationships and explain your normalization choices.", "label": "frontier"}
+{"id": 29, "question": "Compare and contrast microservices architecture versus monolithic architecture. When would you recommend migrating from monolith to microservices, and what are the hidden costs?", "label": "frontier"}
+{"id": 30, "question": "Write a Python function that implements a least recently used (LRU) cache with O(1) get and put operations. Explain your data structure choices.", "label": "frontier"}
+{"id": 31, "question": "Analyze the time and space complexity of merge sort versus quicksort. Under what conditions does quicksort degrade to O(n^2), and how can you prevent it?", "label": "frontier"}
+{"id": 32, "question": "Explain how a transformer model processes a sentence, including the roles of self-attention, positional encoding, and the feed-forward layers. Use a concrete example.", "label": "frontier"}
+{"id": 33, "question": "A distributed system experiences split-brain during a network partition. Explain the CAP theorem trade-offs and design a strategy to handle this scenario in a banking application.", "label": "frontier"}
+{"id": 34, "question": "Review this SQL query for performance issues and suggest optimizations:\nSELECT * FROM orders o JOIN customers c ON o.customer_id = c.id WHERE o.created_at > '2024-01-01' ORDER BY o.total DESC LIMIT 100;", "label": "frontier"}
+{"id": 35, "question": "Explain how garbage collection works in Java versus Python. Compare reference counting, mark-and-sweep, and generational collection approaches.", "label": "frontier"}
+{"id": 36, "question": "Design an API rate limiter that supports multiple tiers (free, pro, enterprise) with different limits. It should handle distributed deployment across multiple servers. Provide pseudocode.", "label": "frontier"}
+{"id": 37, "question": "Analyze the security vulnerabilities in this authentication flow: user sends password over HTTPS, server hashes with MD5, stores in database, compares on next login. What should change and why?", "label": "frontier"}
+{"id": 38, "question": "Write a recursive descent parser for simple arithmetic expressions (addition, multiplication, parentheses) in Python. Handle operator precedence correctly.", "label": "frontier"}
+{"id": 39, "question": "Explain the Byzantine Generals Problem and how practical Byzantine Fault Tolerance (pBFT) addresses it. What are the performance trade-offs at scale?", "label": "frontier"}
+{"id": 40, "question": "Debug this race condition: two threads increment a shared counter 1000 times each, but the final value is less than 2000. Explain why and provide three different solutions.", "label": "frontier"}
+{"id": 41, "question": "Compare event-driven architecture versus request-response patterns. Design an event-sourcing system for an e-commerce order pipeline with compensation for failures.", "label": "frontier"}
+{"id": 42, "question": "Explain how consensus algorithms like Raft work. Walk through a leader election scenario with five nodes where the leader fails mid-term.", "label": "frontier"}
+{"id": 43, "question": "Given a legacy codebase with no tests and tightly coupled modules, create a step-by-step refactoring plan. How do you add tests safely without breaking production?", "label": "frontier"}
+{"id": 44, "question": "Analyze the trade-offs between using a relational database versus a document store for a social media application. Consider read patterns, write patterns, scaling, and schema evolution.", "label": "frontier"}
+{"id": 45, "question": "Implement a concurrent web crawler in Python that respects robots.txt, handles rate limiting, avoids duplicate URLs, and gracefully handles failures. Outline the architecture.", "label": "frontier"}
+{"id": 46, "question": "Explain how TLS 1.3 handshake works step by step. What changed from TLS 1.2 and why? How does it achieve forward secrecy?", "label": "frontier"}
+{"id": 47, "question": "Design a real-time collaborative text editor like Google Docs. Explain how you would handle concurrent edits using operational transformation or CRDTs.", "label": "frontier"}
+{"id": 48, "question": "A Kubernetes pod keeps crashing with OOMKilled. Walk through your debugging process from kubectl commands to code-level memory profiling.", "label": "frontier"}
+{"id": 49, "question": "Explain the internals of how a B+ tree index works in a database. Why is it preferred over a hash index for range queries? Include the performance characteristics.", "label": "frontier"}
+{"id": 50, "question": "Write a Python decorator that implements exponential backoff with jitter for retrying failed API calls. It should support configurable max retries, base delay, and specific exception types.", "label": "frontier"}

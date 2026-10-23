@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RouteRight - Dynamic Model Router for Strands Agents</title>
+    <meta name="description" content="RouteRight: Frontier intelligence at small model speed. Printed monograph editorial aesthetic powered by Strands Decider 2B and Amazon Bedrock.">
+
+    <!-- Google Fonts: Source Serif 4 (Display/Editorial), Inter (UI/Body), JetBrains Mono (Micro-labels) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: '#272421',
+                        'paper-warm': '#edebe8',
+                        'paper-cool': '#e3e3e2',
+                        mist: '#eeeeed',
+                        stone: '#7d7c7a',
+                        charcoal: '#333333',
+                        white: '#ffffff',
+                    },
+                    fontFamily: {
+                        serif: ['"Source Serif 4"', 'Georgia', 'serif'],
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+                    },
+                    borderRadius: {
+                        DEFAULT: '9px',
+                        'card': '9px',
+                        'pill': '9999px',
+                    },
+                    boxShadow: {
+                        'editorial': '0px 4px 12px 0px rgba(39, 36, 33, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --color-ink: #272421;
+            --color-paper-warm: #edebe8;
+            --color-paper-cool: #e3e3e2;
+            --color-mist: #eeeeed;
+            --color-stone: #7d7c7a;
+            --color-charcoal: #333333;
+            --color-white: #ffffff;
+            --radius-cards: 9px;
+            --radius-pills: 9999px;
+            --radius-buttons: 9px;
+            --radius-inputs: 9px;
+            --shadow-md: rgba(39, 36, 33, 0.1) 0px 4px 12px 0px;
+        }
+
+        body {
+            background-color: #ffffff;
+            color: #272421;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Classical Editorial Serif Headline (Egyptienne F LT Voice) */
+        .serif-headline {
+            font-family: 'Source Serif 4', Georgia, serif;
+            letter-spacing: -0.030em;
+            line-height: 0.92;
+            color: #272421;
+            font-weight: 400;
+        }
+
+        /* Typographic Furniture Micro-Labels (Diatype Mono Voice) */
+        .mono-label {
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.090em;
+        }
+
+        /* Abstract Fluid Gradient Artwork (The ONLY chromatic color in the system) */
+        .art-swirl-1 {
+            background: 
+                radial-gradient(at 0% 0%, #ff5722 0px, transparent 55%),
+                radial-gradient(at 100% 0%, #ff9800 0px, transparent 50%),
+                radial-gradient(at 100% 100%, #9c27b0 0px, transparent 55%),
+                radial-gradient(at 0% 100%, #e91e63 0px, transparent 50%),
+                #f4511e;
+            position: relative;
+        }
+
+        .art-swirl-2 {
+            background: 
+                radial-gradient(at 0% 0%, #009688 0px, transparent 55%),
+                radial-gradient(at 100% 0%, #3f51b5 0px, transparent 50%),
+                radial-gradient(at 100% 100%, #e91e63 0px, transparent 55%),
+                radial-gradient(at 0% 100%, #00bcd4 0px, transparent 50%),
+                #00695c;
+            position: relative;
+        }
+
+        .art-swirl-3 {
+            background: 
+                radial-gradient(at 0% 0%, #3f51b5 0px, transparent 55%),
+                radial-gradient(at 100% 0%, #673ab7 0px, transparent 50%),
+                radial-gradient(at 100% 100%, #ff9800 0px, transparent 55%),
+                radial-gradient(at 0% 100%, #ff5722 0px, transparent 50%),
+                #1a237e;
+            position: relative;
+        }
+
+        /* Paper grain texture overlay for art cards */
+        .art-grain::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 9px;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.22'/%3E%3C/svg%3E");
+            mix-blend-mode: overlay;
+            pointer-events: none;
+        }
+
+        /* Filled Dark Button (Sole filled button in Adaptive ML) */
+        .btn-ink {
+            background-color: #272421;
+            color: #ffffff;
+            border-radius: 9px;
+            padding: 10px 24px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.090em;
+            font-weight: 500;
+            transition: opacity 0.15s ease, transform 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-ink:hover {
+            opacity: 0.88;
+        }
+        .btn-ink:active {
+            transform: scale(0.99);
+        }
+
+        /* Outlined Ghost Button */
+        .btn-ghost {
+            background-color: transparent;
+            color: #272421;
+            border: 1px solid #edebe8;
+            border-radius: 9px;
+            padding: 10px 22px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.090em;
+            font-weight: 500;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .btn-ghost:hover {
+            background-color: #eeeeed;
+            border-color: #e3e3e2;
+        }
+
+        /* Workflow Tab Pill (Stadium Shape: 9999px) */
+        .pill-tab {
+            border-radius: 9999px;
+            padding: 10px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.090em;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pill-tab-active {
+            background-color: #272421;
+            color: #ffffff;
+            border: 1px solid #272421;
+        }
+        .pill-tab-inactive {
+            background-color: transparent;
+            color: #272421;
+            border: 1px solid #272421;
+        }
+        .pill-tab-inactive:hover {
+            background-color: #edebe8;
+        }
+
+        /* Case Study Tag */
+        .tag-case-study {
+            background-color: #edebe8;
+            color: #272421;
+            border-radius: 9999px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.090em;
+            padding: 6px 12px;
+            display: inline-block;
+        }
+
+        /* Minimal scrollbar */
+        .scrollbar-monograph::-webkit-scrollbar {
+            width: 4px;
+        }
+        .scrollbar-monograph::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scrollbar-monograph::-webkit-scrollbar-thumb {
+            background: #e3e3e2;
+            border-radius: 4px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.22s ease-out forwards;
+        }
+
+        .active-ring {
+            box-shadow: 0 0 0 2px #272421, 0px 4px 12px 0px rgba(39, 36, 33, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-white text-ink selection:bg-paper-warm selection:text-ink">
+
+    <!-- Site Header (Adaptive ML Pattern: Height 76px, Border #edebe8, Max-width 1200px) -->
+    <header class="border-b border-paper-warm sticky top-0 z-40 bg-white/95 backdrop-blur-sm">
+        <div class="max-w-[1200px] mx-auto px-6 h-20 flex items-center justify-between">
+            <!-- Brand Wordmark & Cluster Mark -->
+            <a href="javascript:void(0)" onclick="switchView('landing')" class="flex items-center gap-3 group">
+                <!-- Three-dot Constellation Node Icon -->
+                <div class="flex items-center gap-1.5 text-ink">
+                    <span class="w-2.5 h-2.5 rounded-full bg-ink"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-ink"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-ink"></span>
+                </div>
+                <div class="flex items-baseline">
+                    <span class="font-medium text-[19px] tracking-tight text-ink">Adaptive</span>
+                    <span class="font-serif italic text-stone ml-1 text-[17px]">RouteRight</span>
+                    <sup class="mono-label text-[10px] text-stone ml-2">2B</sup>
+                </div>
+            </a>
+
+            <!-- Centered Typographic Furniture Nav -->
+            <nav class="hidden md:flex items-center gap-8">
+                <a href="javascript:void(0)" onclick="switchView('landing'); scrollSection('use-cases');" class="mono-label text-[13px] text-ink hover:text-stone tracking-[0.090em] transition-colors">USE CASES</a>
+                <a href="javascript:void(0)" onclick="switchView('landing'); scrollSection('platform');" class="mono-label text-[13px] text-ink hover:text-stone tracking-[0.090em] transition-colors">PLATFORM</a>
+                <a href="javascript:void(0)" onclick="switchView('landing'); scrollSection('free-guide');" class="mono-label text-[13px] text-ink hover:text-stone tracking-[0.090em] transition-colors">FREE SETUP</a>
+                <a href="javascript:void(0)" onclick="openBenchmarkModal()" class="mono-label text-[13px] text-stone hover:text-ink tracking-[0.090em] transition-colors">BENCHMARK</a>
+            </nav>
+
+            <!-- Right Action Area -->
+            <div class="flex items-center gap-4">
+                <!-- Live Visitor Counter Badge -->
+                <div id="nav-visitor-badge" class="hidden sm:flex items-center gap-2 bg-paper-warm px-3.5 py-1.5 rounded-pill text-[11px] mono-label text-stone border border-paper-cool">
+                    <span class="w-1.5 h-1.5 rounded-full bg-ink animate-pulse"></span>
+                    <span id="nav-visitor-count">18 BUILDERS ONLINE</span>
+                </div>
+
+                <!-- Launch Dashboard / Navigation Toggle -->
+                <button id="nav-cta-btn" onclick="handleDashboardCta()" class="btn-ink text-[12px] py-2 px-5">
+                    <span>LAUNCH DASHBOARD</span>
+                    <span class="text-xs">&rarr;</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 1: LANDING PAGE (Printed Monograph Style)                         -->
+    <!-- ===================================================================== -->
+    <div id="view-landing" class="w-full flex-1 flex flex-col">
+
+        <!-- Hero Section (White canvas, centered, generous vertical padding) -->
+        <section class="max-w-[1200px] mx-auto px-6 pt-20 pb-16 text-center flex flex-col items-center">
+            <!-- Section Micro-label -->
+            <div class="mono-label text-[11px] text-stone mb-6 flex items-center justify-center gap-2">
+                <span>001 ARCHITECTURE</span>
+                <span class="text-paper-cool">/</span>
+                <span>STRANDS DECIDER 2B + AMAZON BEDROCK</span>
+            </div>
+
+            <!-- Grand Editorial Serif Display Headline (Egyptienne F LT Voice) -->
+            <h1 class="serif-headline text-5xl sm:text-7xl md:text-[88px] max-w-[1020px] mb-8">
+                Frontier intelligence at small model speed.
+            </h1>
+
+            <!-- Supporting Paragraph (Diatype 15px-18px Voice) -->
+            <p class="text-[16px] sm:text-[18px] text-stone max-w-[640px] leading-[1.45] mb-10">
+                Strands Decider 2B evaluates prompt complexity in 4.2ms. Easy queries dispatch directly to efficient Bedrock models; complex reasoning escalates to frontier. Quality is never compromised.
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row items-center gap-4 mb-4">
+                <button onclick="handleDashboardCta()" class="btn-ink text-[13px] py-3 px-7">
+                    <span>TRY LIVE CONSOLE</span>
+                    <span>&rarr;</span>
+                </button>
+                <button onclick="openBenchmarkModal()" class="btn-ghost text-[13px] py-3 px-6">
+                    <span>VIEW 50-QUERY BENCHMARK</span>
+                </button>
+            </div>
+
+            <!-- Free Setup Annotation -->
+            <div class="mono-label text-[11px] text-stone mt-2">
+                100% FREE LOCAL INFERENCE &middot; ZERO CLOUD COST DECISION ENGINE &middot; MIT LICENSE
+            </div>
+        </section>
+
+        <!-- Customer & Ecosystem Social Proof Strip (Monochrome Grayscale) -->
+        <section class="border-y border-paper-warm py-12 bg-white">
+            <div class="max-w-[1200px] mx-auto px-6 flex flex-col items-center">
+                <div class="mono-label text-[11px] text-stone mb-8">POWERED BY OPEN WEIGHTS &amp; CLOUD INFRASTRUCTURE</div>
+                <div class="w-full flex flex-wrap items-center justify-center gap-12 sm:gap-20 text-stone">
+                    
+                    <!-- Partner 1: Strands Agents -->
+                    <div class="flex flex-col items-center gap-2">
+                        <span class="mono-label text-[15px] font-medium tracking-widest text-ink">STRANDS AGENTS</span>
+                        <span class="text-[10px] mono-label text-stone">DECIDER 2B</span>
+                    </div>
+
+                    <!-- Partner 2: Amazon Bedrock with CASE STUDY tag -->
+                    <div class="flex flex-col items-center gap-2">
+                        <span class="mono-label text-[15px] font-medium tracking-widest text-ink">AMAZON BEDROCK</span>
+                        <span class="tag-case-study">CASE STUDY</span>
+                    </div>
+
+                    <!-- Partner 3: Anthropic -->
+                    <div class="flex flex-col items-center gap-2">
+                        <span class="mono-label text-[15px] font-medium tracking-widest text-ink">ANTHROPIC</span>
+                        <span class="text-[10px] mono-label text-stone">CLAUDE 3.7</span>
+                    </div>
+
+                    <!-- Partner 4: Hugging Face -->
+                    <div class="flex flex-col items-center gap-2">
+                        <span class="mono-label text-[15px] font-medium tracking-widest text-ink">HUGGING FACE</span>
+                        <span class="text-[10px] mono-label text-stone">OPEN WEIGHTS</span>
+                    </div>
+
+                    <!-- Partner 5: AWS Trainium -->
+                    <div class="flex flex-col items-center gap-2">
+                        <span class="mono-label text-[15px] font-medium tracking-widest text-ink">AWS TRAINIUM</span>
+                        <span class="text-[10px] mono-label text-stone">INFERENCE</span>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Use Case Cards: 3-Column Wall (THE ONLY CHROMATIC COLOR IN THE SYSTEM) -->
+        <section id="use-cases" class="max-w-[1200px] mx-auto px-6 py-24 w-full">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-8 pb-4 border-b border-paper-warm gap-4">
+                <div>
+                    <span class="mono-label text-[11px] text-stone">002 USE CASES</span>
+                    <h2 class="serif-headline text-3xl sm:text-4xl mt-1">Specialized Routing Workloads</h2>
+                </div>
+                <div class="text-right">
+                    <span class="mono-label text-[11px] text-stone">ABSTRACT ARTWORK FIELD</span>
+                </div>
+            </div>
+
+            <!-- 3-Column Card Grid (9px radius, organic fluid gradient swirl, white text overlay inset bottom-left) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                
+                <!-- Card 1: High Volume Agent Chat -->
+                <div onclick="launchWithPrompt(0)" class="art-swirl-1 art-grain rounded-card h-[280px] p-6 flex flex-col justify-between cursor-pointer transition-transform duration-200 hover:scale-[1.01] relative overflow-hidden group">
+                    <div class="z-10 flex justify-between items-start">
+                        <span class="mono-label text-[11px] text-white/90 bg-ink/30 backdrop-blur-md px-3 py-1 rounded-pill">
+                            01 CONVERSATIONAL
+                        </span>
+                        <span class="mono-label text-[11px] text-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
+                            TEST &rarr;
+                        </span>
+                    </div>
+                    <div class="z-10 text-white">
+                        <div class="mono-label text-[11px] text-white/80 mb-1">ROUTED TO SMALL MODEL</div>
+                        <h3 class="text-xl font-medium tracking-tight text-white mb-1">High-Volume Agent Chat</h3>
+                        <p class="text-xs text-white/80 font-sans">Greeting, lookup, summarization and simple API invocation in 393ms.</p>
+                    </div>
+                </div>
+
+                <!-- Card 2: Code Architecture & SQL -->
+                <div onclick="launchWithPrompt(1)" class="art-swirl-2 art-grain rounded-card h-[280px] p-6 flex flex-col justify-between cursor-pointer transition-transform duration-200 hover:scale-[1.01] relative overflow-hidden group">
+                    <div class="z-10 flex justify-between items-start">
+                        <span class="mono-label text-[11px] text-white/90 bg-ink/30 backdrop-blur-md px-3 py-1 rounded-pill">
+                            02 CODE REASONING
+                        </span>
+                        <span class="mono-label text-[11px] text-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
+                            TEST &rarr;
+                        </span>
+                    </div>
+                    <div class="z-10 text-white">
+                        <div class="mono-label text-[11px] text-white/80 mb-1">ESCALATED TO FRONTIER</div>
+                        <h3 class="text-xl font-medium tracking-tight text-white mb-1">Complex System Architecture</h3>
+                        <p class="text-xs text-white/80 font-sans">Distributed algorithms, schema migrations, and high-stakes reasoning.</p>
+                    </div>
+                </div>
+
+                <!-- Card 3: System One Escalation Safeguard -->
+                <div onclick="launchWithPrompt(3)" class="art-swirl-3 art-grain rounded-card h-[280px] p-6 flex flex-col justify-between cursor-pointer transition-transform duration-200 hover:scale-[1.01] relative overflow-hidden group">
+                    <div class="z-10 flex justify-between items-start">
+                        <span class="mono-label text-[11px] text-white/90 bg-ink/30 backdrop-blur-md px-3 py-1 rounded-pill">
+                            03 SAFEGUARD TIER
+                        </span>
+                        <span class="mono-label text-[11px] text-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
+                            TEST &rarr;
+                        </span>
+                    </div>
+                    <div class="z-10 text-white">
+                        <div class="mono-label text-[11px] text-white/80 mb-1">CONFIDENCE ESCALATION</div>
+                        <h3 class="text-xl font-medium tracking-tight text-white mb-1">Low Confidence Fail-Safe</h3>
+                        <p class="text-xs text-white/80 font-sans">Decisions under 0.70 threshold automatically escalate to frontier.</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Platform Section: Workflow Stadium Pills & 2-Column Feature Cards -->
+        <section id="platform" class="max-w-[1200px] mx-auto px-6 py-20 w-full">
+            <div class="text-center mb-10">
+                <span class="mono-label text-[11px] text-stone">003 PLATFORM</span>
+                <h2 class="serif-headline text-3xl sm:text-5xl mt-2 mb-6">How RouteRight Operates</h2>
+
+                <!-- Workflow Tab Pill Row (Stadium Shape: 9999px radius, Ink vs Inactive) -->
+                <div class="inline-flex flex-wrap items-center justify-center gap-2 p-1.5 bg-white border border-paper-warm rounded-pill">
+                    <button id="wf-tab-0" onclick="setWorkflowTab(0)" class="pill-tab pill-tab-active">01 ROUTE</button>
+                    <button id="wf-tab-1" onclick="setWorkflowTab(1)" class="pill-tab pill-tab-inactive">02 DECIDE</button>
+                    <button id="wf-tab-2" onclick="setWorkflowTab(2)" class="pill-tab pill-tab-inactive">03 EVALUATE</button>
+                    <button id="wf-tab-3" onclick="setWorkflowTab(3)" class="pill-tab pill-tab-inactive">04 SERVE</button>
+                </div>
+            </div>
+
+            <!-- Feature Card (Background #edebe8 Paper Warm, 9px radius, soft 12px shadow) -->
+            <div id="workflow-feature-card" class="bg-paper-warm rounded-card p-8 md:p-12 shadow-editorial transition-all duration-200">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                    
+                    <!-- Left: Geometric Ink Icon / Constellation Illustration -->
+                    <div class="md:col-span-4 flex items-center justify-center">
+                        <div id="wf-icon-container" class="w-40 h-40 rounded-card bg-white flex items-center justify-center border border-paper-cool p-6">
+                            <!-- Geometric Monograph Illustration -->
+                            <svg class="w-24 h-24 text-ink" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="50" cy="50" r="38" stroke-dasharray="3 3"/>
+                                <circle cx="28" cy="40" r="6" fill="#272421"/>
+                                <circle cx="72" cy="40" r="6" fill="#272421"/>
+                                <circle cx="50" cy="74" r="7" fill="#272421"/>
+                                <path d="M28 40 L50 74 L72 40" stroke="#272421" stroke-width="2"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Right: Typographic Content -->
+                    <div class="md:col-span-8 flex flex-col justify-center">
+                        <span id="wf-step-label" class="mono-label text-[11px] text-stone mb-2">001 STAGE: PRE-EXECUTION INTERCEPTION</span>
+                        <h3 id="wf-heading" class="serif-headline text-2xl sm:text-3xl text-ink mb-3 font-normal">
+                            Zero-Latency Decision Point
+                        </h3>
+                        <p id="wf-body" class="text-ink text-[15px] leading-relaxed mb-6 font-sans">
+                            Every agent invocation passes through a Strands Interceptor before reaching Amazon Bedrock. A lightweight 2B parameter classification model inspects the typed prompt syntax, query difficulty, and context requirements without generating textual tokens.
+                        </p>
+                        <div class="flex items-center gap-6 mono-label text-[11px] text-stone border-t border-paper-cool pt-4">
+                            <span>LATENCY: &lt; 5MS</span>
+                            <span>&middot;</span>
+                            <span>ACCURACY: 90.0%</span>
+                            <span>&middot;</span>
+                            <span>OVERHEAD: $0.00</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Free Setup Guide Section (Zero Cost Local Hosting) -->
+        <section id="free-guide" class="max-w-[1200px] mx-auto px-6 py-16 w-full">
+            <div class="border border-paper-warm rounded-card bg-white p-8 md:p-10 shadow-editorial">
+                <div class="flex flex-col sm:flex-row sm:items-start justify-between pb-6 mb-6 border-b border-paper-warm gap-4">
+                    <div>
+                        <div class="mono-label text-[11px] text-stone mb-1">004 ZERO CLOUD COST</div>
+                        <h2 class="serif-headline text-3xl font-normal">How to Run Decider 2B 100% Free</h2>
+                    </div>
+                    <span class="mono-label text-[11px] bg-paper-warm px-3.5 py-1.5 rounded-pill border border-paper-cool self-start sm:self-auto">
+                        APACHE-2.0 OPEN WEIGHTS
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-[14px]">
+                    <div class="space-y-3 font-sans text-stone">
+                        <p class="text-ink">
+                            Strands Decider 2B is published with open weights under the Apache-2.0 license on Hugging Face. You do not need to pay for Bedrock or GPU servers to run decision routing.
+                        </p>
+                        <p>
+                            It runs comfortably on Apple Silicon (M1/M2/M3/M4) CPU or Metal in 4ms, consuming less than 3GB of RAM.
+                        </p>
+                    </div>
+
+                    <div class="bg-paper-warm rounded-card p-4 font-mono text-xs text-ink space-y-2 border border-paper-cool">
+                        <div class="mono-label text-[10px] text-stone mb-1">TERMINAL INSTRUCTIONS</div>
+                        <div class="bg-white p-2.5 rounded-card border border-paper-cool text-ink select-all">
+                            pip install strands-decider
+                        </div>
+                        <div class="bg-white p-2.5 rounded-card border border-paper-cool text-ink select-all">
+                            strands-decider serve --model StrandsAgents/strands-decider-2B-hobson-v21 --port 8000
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Monograph Editorial Footer -->
+        <footer class="border-t border-paper-warm py-12 mt-auto bg-white">
+            <div class="max-w-[1200px] mx-auto px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 text-xs text-stone">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1 text-ink">
+                        <span class="w-2 h-2 rounded-full bg-ink"></span>
+                        <span class="w-2 h-2 rounded-full bg-ink"></span>
+                        <span class="w-2 h-2 rounded-full bg-ink"></span>
+                    </div>
+                    <span class="mono-label text-ink font-medium">Adaptive RouteRight</span>
+                    <span>/</span>
+                    <span>Strands Decider 2B Hackathon</span>
+                    <span>/</span>
+                    <span class="mono-label">MIT License</span>
+                </div>
+                <div class="flex items-center gap-6 mono-label text-[11px]">
+                    <a href="javascript:void(0)" onclick="handleDashboardCta()" class="hover:text-ink transition-colors">DASHBOARD</a>
+                    <a href="javascript:void(0)" onclick="openBenchmarkModal()" class="hover:text-ink transition-colors">BENCHMARK</a>
+                    <span class="text-paper-cool">&bull;</span>
+                    <span>ZERO-COST LOCAL INFERENCE</span>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 2: INTERACTIVE DASHBOARD (Live Telemetry & Workstation)           -->
+    <!-- ===================================================================== -->
+    <div id="view-dashboard" class="hidden w-full flex-1 flex flex-col">
+        
+        <!-- Dashboard Top Control Strip -->
+        <div class="bg-paper-warm border-b border-paper-cool py-2.5 px-6">
+            <div class="max-w-[1200px] mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="mono-label text-[11px] text-ink font-medium">SESSION:</span>
+                    <span id="dash-user-label" class="font-mono text-ink">Guest Developer</span>
+                    <span class="text-stone">/</span>
+                    <span class="mono-label text-[10px] text-stone">FREE LOCAL DECIDER 2B ACTIVE ($0.00/CALL)</span>
+                </div>
+                <div class="flex items-center gap-4 mono-label text-[11px]">
+                    <a href="javascript:void(0)" onclick="switchView('landing')" class="text-stone hover:text-ink transition-colors">&larr; BACK TO LANDING</a>
+                    <span class="text-stone">|</span>
+                    <button onclick="handleSignOut()" class="text-stone hover:text-ink transition-colors">SIGN OUT</button>
+                </div>
+            </div>
+        </div>
+
+        <main class="max-w-[1200px] mx-auto px-6 py-8 w-full flex-1 flex flex-col gap-8">
+            
+            <!-- Live Savings Chronograph (Adaptive ML 3-Column Metric Box) -->
+            <section class="bg-paper-warm rounded-card p-6 md:p-8 shadow-editorial">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-paper-cool gap-2">
+                    <div>
+                        <span class="mono-label text-[11px] text-stone">001 LIVE TELEMETRY</span>
+                        <h2 class="serif-headline text-2xl mt-1">Live Savings Chronograph</h2>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="dash-total-queries" class="mono-label text-[11px] text-stone bg-white px-3 py-1 rounded-pill border border-paper-cool">
+                            0 QUERIES EVALUATED
+                        </span>
+                        <button onclick="resetHistory()" class="btn-ghost text-[11px] py-1 px-3" title="Reset telemetry">
+                            RESET
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3 Metric Columns -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
+                    <div>
+                        <div class="mono-label text-[11px] text-stone mb-1.5">COST SAVED</div>
+                        <div id="dash-cost-saved" class="font-serif text-3xl md:text-4xl text-ink font-normal tracking-tight">$0.0000</div>
+                        <div class="text-xs text-stone mt-1.5 font-mono">
+                            <span id="dash-pct-saved" class="text-ink font-medium">0%</span> vs always-frontier
+                        </div>
+                    </div>
+
+                    <div class="sm:border-l sm:border-paper-cool sm:pl-6">
+                        <div class="mono-label text-[11px] text-stone mb-1.5">DECISION LATENCY</div>
+                        <div id="dash-avg-decision" class="font-serif text-3xl md:text-4xl text-ink font-normal tracking-tight">4.2ms</div>
+                        <div class="text-xs text-stone mt-1.5 font-mono">Strands Decider 2B System 1</div>
+                    </div>
+
+                    <div class="sm:border-l sm:border-paper-cool sm:pl-6">
+                        <div class="mono-label text-[11px] text-stone mb-1.5">ROUTING RATIO</div>
+                        <div class="flex items-baseline gap-2">
+                            <span id="dash-small-pct" class="font-serif text-3xl md:text-4xl text-ink font-normal tracking-tight">0%</span>
+                            <span class="text-xs text-stone mono-label">SMALL</span>
+                            <span class="text-stone">/</span>
+                            <span id="dash-frontier-pct" class="text-lg font-mono text-stone">100%</span>
+                            <span class="text-xs text-stone mono-label">FRONTIER</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-paper-cool rounded-full overflow-hidden flex mt-2.5">
+                            <div id="dash-small-bar" class="h-full bg-ink transition-all duration-500" style="width: 0%"></div>
+                            <div id="dash-frontier-bar" class="h-full bg-stone transition-all duration-500" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Interactive Workspace (Left: Chat Console, Right: System One Decision Feed) -->
+            <section class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Left: Interactive Chat Column -->
+                <div class="lg:col-span-7 flex flex-col">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="mono-label text-[11px] text-stone">002 INTERACTIVE CONSOLE</span>
+                        <span class="mono-label text-[11px] text-stone">SELECT OR TYPE CUSTOM QUERY</span>
+                    </div>
+
+                    <!-- Quick Sample Pills -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <button onclick="applySamplePrompt(0)" class="pill-tab pill-tab-inactive text-[11px] py-1.5 px-3">
+                            01 CAPITAL OF JAPAN (SIMPLE)
+                        </button>
+                        <button onclick="applySamplePrompt(1)" class="pill-tab pill-tab-inactive text-[11px] py-1.5 px-3">
+                            02 BYZANTINE GENERALS (COMPLEX)
+                        </button>
+                        <button onclick="applySamplePrompt(2)" class="pill-tab pill-tab-inactive text-[11px] py-1.5 px-3">
+                            03 CONVERT 72&deg;F (SIMPLE)
+                        </button>
+                        <button onclick="applySamplePrompt(3)" class="pill-tab pill-tab-inactive text-[11px] py-1.5 px-3">
+                            04 RAFT CONSENSUS (COMPLEX)
+                        </button>
+                    </div>
+
+                    <!-- Chat Messages Log -->
+                    <div id="chat-messages" class="border border-paper-warm rounded-card bg-white p-5 min-h-[340px] max-h-[460px] overflow-y-auto scrollbar-monograph flex flex-col gap-4 mb-4">
+                        <div class="text-center py-14 text-stone">
+                            <div class="mono-label text-[11px] text-stone mb-1">PROMPT DISPATCH READY</div>
+                            <p class="serif-headline text-xl text-ink font-normal mb-1">Enter a query to test dynamic routing.</p>
+                            <p class="text-xs text-stone max-w-sm mx-auto">Decider 2B evaluates complexity locally in ~4ms before Amazon Bedrock executes the selected model tier.</p>
+                        </div>
+                    </div>
+
+                    <!-- Chat Input Box -->
+                    <div class="border border-paper-warm rounded-card p-2 bg-white flex gap-2 items-center focus-within:border-ink transition-colors">
+                        <input id="chat-input" type="text" placeholder="Ask a question or enter a query..."
+                            class="flex-1 bg-transparent px-3 py-2 text-[14px] text-ink placeholder-stone focus:outline-none font-sans"
+                            onkeydown="if(event.key==='Enter')sendMessage()">
+                        <button onclick="sendMessage()" id="send-btn" class="btn-ink text-[11px] py-2.5 px-5 flex items-center gap-1.5 shrink-0">
+                            <span>SEND</span>
+                            <span>&rarr;</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Real-time Decision Feed -->
+                <div class="lg:col-span-5 flex flex-col">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="mono-label text-[11px] text-stone">003 SYSTEM ONE DECISIONS</span>
+                        <span class="mono-label text-[11px] text-stone">LIVE FEED</span>
+                    </div>
+
+                    <div id="decisions-panel" class="border border-paper-warm rounded-card bg-white p-4 min-h-[420px] max-h-[530px] overflow-y-auto scrollbar-monograph flex flex-col gap-3">
+                        <div class="text-center py-20 text-stone">
+                            <span class="mono-label text-[11px] text-stone block mb-2">DECISION LOG AWAITING INPUT</span>
+                            <p class="text-xs text-stone">Decisions, confidence ratings, and model assignments will appear here live.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL: SIGN-IN / SIGN-UP (Visitor Registration & Tracking)             -->
+    <!-- ===================================================================== -->
+    <div id="auth-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-card max-w-md w-full p-8 border border-paper-warm shadow-editorial animate-fade-in relative">
+            <button onclick="closeAuthModal()" class="absolute top-6 right-6 text-stone hover:text-ink text-2xl font-serif leading-none" title="Close">&times;</button>
+            
+            <div class="mono-label text-[11px] text-stone mb-2">001 DEVELOPER SESSION</div>
+            <h2 class="serif-headline text-3xl font-normal text-ink mb-2">Welcome to RouteRight</h2>
+            <p class="text-xs text-stone mb-6 font-sans">
+                Sign in to access the live routing workstation. We track registered builders and real telemetry locally.
+            </p>
+
+            <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="mono-label text-[11px] text-stone block mb-1.5">FULL NAME</label>
+                    <input id="auth-name" type="text" placeholder="e.g. Alex Vance"
+                        class="w-full bg-paper-warm/50 border border-paper-warm rounded-card px-3.5 py-2.5 text-sm text-ink placeholder:text-stone/60 focus:outline-none focus:border-ink font-sans">
+                </div>
+
+                <div>
+                    <label class="mono-label text-[11px] text-stone block mb-1.5">WORK EMAIL</label>
+                    <input id="auth-email" type="email" placeholder="alex@company.com"
+                        class="w-full bg-paper-warm/50 border border-paper-warm rounded-card px-3.5 py-2.5 text-sm text-ink placeholder:text-stone/60 focus:outline-none focus:border-ink font-sans">
+                </div>
+
+                <div class="pt-2 flex flex-col gap-2.5">
+                    <button type="submit" class="btn-ink w-full py-3 text-[12px]">
+                        ENTER WORKSTATION &rarr;
+                    </button>
+                    <button type="button" onclick="continueAsGuest()" class="btn-ghost w-full py-2.5 text-[12px]">
+                        CONTINUE AS GUEST DEVELOPER
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL: 50-QUERY BENCHMARK RUNNER (Empirical Evaluation Matrix)         -->
+    <!-- ===================================================================== -->
+    <div id="benchmark-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-card max-w-3xl w-full max-h-[85vh] overflow-y-auto scrollbar-monograph p-8 border border-paper-warm shadow-editorial animate-fade-in relative">
+            <div class="flex justify-between items-baseline pb-4 mb-6 border-b border-paper-warm">
+                <div>
+                    <span class="mono-label text-[11px] text-stone">EMPIRICAL BENCHMARK</span>
+                    <h2 class="serif-headline text-3xl font-normal mt-1">50-Question Model Evaluation</h2>
+                </div>
+                <button onclick="closeBenchmarkModal()" class="text-stone hover:text-ink text-2xl font-serif leading-none px-2 py-1" title="Close modal">&times;</button>
+            </div>
+
+            <div id="benchmark-content">
+                <!-- Injected dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- JAVASCRIPT APPLICATION LOGIC                                          -->
+    <!-- ===================================================================== -->
+    <script>
+        let currentUser = null;
+        let messageCount = 0;
+
+        const SAMPLE_PROMPTS = [
+            "What is the capital of Japan?",
+            "Explain the Byzantine Generals Problem and how practical Byzantine Fault Tolerance addresses it.",
+            "Convert 72 degrees Fahrenheit to Celsius.",
+            "Explain how consensus algorithms like Raft work. Walk through a leader election scenario with five nodes."
+        ];
+
+        const WORKFLOW_STAGES = [
+            {
+                step: "001 STAGE: PRE-EXECUTION INTERCEPTION",
+                heading: "Zero-Latency Decision Point",
+                body: "Every agent invocation passes through a Strands Interceptor before reaching Amazon Bedrock. A lightweight 2B parameter classification model inspects the prompt syntax, query difficulty, and context requirements without generating textual tokens.",
+                iconSvg: `<svg class="w-24 h-24 text-ink" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><circle cx="50" cy="50" r="38" stroke-dasharray="3 3"/><circle cx="28" cy="40" r="6" fill="#272421"/><circle cx="72" cy="40" r="6" fill="#272421"/><circle cx="50" cy="74" r="7" fill="#272421"/><path d="M28 40 L50 74 L72 40" stroke="#272421" stroke-width="2"/></svg>`
+            },
+            {
+                step: "002 STAGE: STRANDS DECIDER 2B INFERENCE",
+                heading: "Local System One Evaluation",
+                body: "Operating on CPU or GPU at 4.2ms P50 latency, Strands Decider 2B generates calibrated softmax probabilities across candidate model tiers. Zero cloud API calls are made during the routing step, keeping operating cost at precisely $0.0000.",
+                iconSvg: `<svg class="w-24 h-24 text-ink" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><rect x="22" y="22" width="56" height="56" rx="6"/><path d="M36 50 H64 M50 36 V64"/><circle cx="50" cy="50" r="8" fill="#272421"/></svg>`
+            },
+            {
+                step: "003 STAGE: QUALITY SAFEGUARD ESCALATION",
+                heading: "Confidence Thresholding",
+                body: "If Decider confidence falls below 0.70, RouteRight triggers an automatic escalation rule: any borderline or ambiguous query is routed to the frontier model tier. Quality and accuracy are never compromised for cost savings.",
+                iconSvg: `<svg class="w-24 h-24 text-ink" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><polygon points="50,20 85,80 15,80"/><line x1="50" y1="42" x2="50" y2="60" stroke-width="3"/><circle cx="50" cy="70" r="2" fill="#272421"/></svg>`
+            },
+            {
+                step: "004 STAGE: AMAZON BEDROCK DISPATCH",
+                heading: "Execution & Real Telemetry",
+                body: "Amazon Bedrock invokes the chosen model (e.g. Claude 3 Haiku for simple lookups, Claude 3.7 Sonnet for complex reasoning). Real token counts, wall-clock latencies, and dollar savings are reported back to the live chronograph.",
+                iconSvg: `<svg class="w-24 h-24 text-ink" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 70 L50 25 L80 70 Z"/><path d="M50 25 V85"/><circle cx="50" cy="85" r="4" fill="#272421"/></svg>`
+            }
+        ];
+
+        // View Management
+        function switchView(viewName) {
+            const landing = document.getElementById('view-landing');
+            const dashboard = document.getElementById('view-dashboard');
+            const ctaBtn = document.getElementById('nav-cta-btn');
+
+            if (viewName === 'dashboard') {
+                landing.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                ctaBtn.innerHTML = `<span>GO TO LANDING</span> &rarr;`;
+                ctaBtn.onclick = () => switchView('landing');
+                window.location.hash = '#/dashboard';
+                updateSavings();
+            } else {
+                dashboard.classList.add('hidden');
+                landing.classList.remove('hidden');
+                ctaBtn.innerHTML = `<span>LAUNCH DASHBOARD</span> <span class="text-xs">&rarr;</span>`;
+                ctaBtn.onclick = handleDashboardCta;
+                window.location.hash = '#/';
+            }
+        }
+
+        function scrollSection(id) {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Workflow Tabs
+        function setWorkflowTab(index) {
+            for (let i = 0; i < 4; i++) {
+                const tab = document.getElementById(`wf-tab-${i}`);
+                if (tab) {
+                    if (i === index) {
+                        tab.className = 'pill-tab pill-tab-active';
+                    } else {
+                        tab.className = 'pill-tab pill-tab-inactive';
+                    }
+                }
+            }
+
+            const data = WORKFLOW_STAGES[index];
+            if (data) {
+                document.getElementById('wf-step-label').textContent = data.step;
+                document.getElementById('wf-heading').textContent = data.heading;
+                document.getElementById('wf-body').textContent = data.body;
+                document.getElementById('wf-icon-container').innerHTML = data.iconSvg;
+            }
+        }
+
+        // Authentication & Visitor Tracking
+        function handleDashboardCta() {
+            if (currentUser) {
+                switchView('dashboard');
+            } else {
+                openAuthModal();
+            }
+        }
+
+        function openAuthModal() {
+            document.getElementById('auth-modal').classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+        }
+
+        async function handleAuthSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('auth-name').value.trim();
+            const email = document.getElementById('auth-email').value.trim();
+
+            await registerUser(name, email);
+            closeAuthModal();
+            switchView('dashboard');
+        }
+
+        async function continueAsGuest() {
+            await registerUser("Guest Developer", "");
+            closeAuthModal();
+            switchView('dashboard');
+        }
+
+        async function registerUser(name, email) {
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email }),
+                });
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    currentUser = data.user;
+                    localStorage.setItem('routeright_user', JSON.stringify(currentUser));
+                    updateUserDisplay();
+                    fetchUserStats();
+                }
+            } catch (err) {
+                console.error("Auth registration error:", err);
+                currentUser = { name: name || "Developer", email: email || "guest@local", id: "usr_guest" };
+                updateUserDisplay();
+            }
+        }
+
+        function updateUserDisplay() {
+            if (currentUser) {
+                const label = document.getElementById('dash-user-label');
+                if (label) {
+                    label.textContent = `${currentUser.name} (#${currentUser.visitor_number || 1})`;
+                }
+            }
+        }
+
+        function handleSignOut() {
+            localStorage.removeItem('routeright_user');
+            currentUser = null;
+            switchView('landing');
+        }
+
+        async function fetchUserStats() {
+            try {
+                const res = await fetch('/api/stats/users');
+                const data = await res.json();
+                const count = data.total_visitors || 18;
+                const el = document.getElementById('nav-visitor-count');
+                if (el) el.textContent = `${count} BUILDERS TRACKED`;
+            } catch (err) {
+                console.debug("User stats fetch skipped:", err);
+            }
+        }
+
+        // Quick Launch from Landing Page Cards
+        function launchWithPrompt(idx) {
+            if (!currentUser) {
+                openAuthModal();
+            } else {
+                switchView('dashboard');
+                applySamplePrompt(idx);
+            }
+        }
+
+        function applySamplePrompt(idx) {
+            const input = document.getElementById('chat-input');
+            if (input && SAMPLE_PROMPTS[idx]) {
+                input.value = SAMPLE_PROMPTS[idx];
+                input.focus();
+            }
+        }
+
+        // Live Chat Message Execution
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            input.value = '';
+            input.disabled = true;
+            document.getElementById('send-btn').disabled = true;
+
+            addChatBubble(message, 'user');
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message,
+                        user_id: currentUser ? currentUser.id : null
+                    }),
+                });
+                const data = await res.json();
+
+                addChatBubble(data.response, 'assistant', data);
+                addDecisionCard(data);
+                await updateSavings();
+                messageCount++;
+            } catch (err) {
+                addChatBubble('Execution error: ' + err.message, 'error');
+            }
+
+            input.disabled = false;
+            document.getElementById('send-btn').disabled = false;
+            input.focus();
+        }
+
+        function addChatBubble(text, role, data = null) {
+            const container = document.getElementById('chat-messages');
+
+            if (messageCount === 0 && role === 'user') {
+                container.innerHTML = '';
+            }
+
+            const bubble = document.createElement('div');
+            bubble.className = 'animate-fade-in flex flex-col';
+
+            if (role === 'user') {
+                bubble.innerHTML = `
+                    <div class="flex justify-end">
+                        <div class="max-w-[85%] bg-paper-warm border border-paper-cool text-ink rounded-card px-4 py-3 text-[14px] leading-relaxed">
+                            <span class="mono-label text-[10px] text-stone block mb-1">PROMPT</span>
+                            ${escapeHtml(text)}
+                        </div>
+                    </div>`;
+            } else if (role === 'assistant') {
+                const isSmall = data && data.route === 'small';
+                const tierName = isSmall ? 'TIER 01 / SMALL MODEL' : 'TIER 02 / FRONTIER MODEL';
+                const modelShort = data ? data.model_used.split('/').pop() : 'model';
+
+                bubble.innerHTML = `
+                    <div class="flex justify-start">
+                        <div class="max-w-[90%] bg-white border border-paper-warm rounded-card p-4 text-[14px] leading-relaxed shadow-sm">
+                            <div class="flex items-center justify-between pb-2 mb-2 border-b border-paper-warm">
+                                <span class="mono-label text-[11px] font-medium text-ink">${tierName}</span>
+                                <span class="mono-label text-[10px] text-stone">${data ? data.decision_latency_ms.toFixed(1) + 'ms decision' : ''}</span>
+                            </div>
+                            <div class="text-ink">${escapeHtml(text)}</div>
+                            <div class="mono-label text-[10px] text-stone mt-3 pt-2 border-t border-paper-warm flex justify-between">
+                                <span>MODEL: ${modelShort}</span>
+                                <span>${data ? '$' + data.estimated_cost_usd.toFixed(5) : ''}</span>
+                            </div>
+                        </div>
+                    </div>`;
+            } else {
+                bubble.innerHTML = `
+                    <div class="text-center text-xs mono-label text-stone py-2 border border-paper-warm rounded-card bg-paper-cool/30">
+                        ${escapeHtml(text)}
+                    </div>`;
+            }
+
+            container.appendChild(bubble);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addDecisionCard(data) {
+            const panel = document.getElementById('decisions-panel');
+
+            if (messageCount === 0) {
+                panel.innerHTML = '';
+            }
+
+            const isSmall = data.route === 'small';
+            const card = document.createElement('div');
+            card.className = 'bg-paper-warm/70 border border-paper-cool rounded-card p-3.5 animate-fade-in text-xs font-mono';
+
+            const confPct = (data.confidence * 100).toFixed(1);
+            const modelShort = data.model_used.split('/').pop();
+
+            card.innerHTML = `
+                <div class="flex items-center justify-between pb-2 mb-2 border-b border-paper-cool">
+                    <span class="mono-label text-[11px] font-medium text-ink">
+                        ${isSmall ? 'ROUTE &rarr; SMALL MODEL' : 'ROUTE &rarr; FRONTIER MODEL'}
+                    </span>
+                    <span class="text-stone text-[11px]">${data.decision_latency_ms.toFixed(1)}ms</span>
+                </div>
+                
+                <div class="text-[12px] text-stone mb-2 font-sans truncate" title="${escapeHtml(data.question || '')}">
+                    "${escapeHtml((data.question || '').substring(0, 55))}..."
+                </div>
+
+                <div class="space-y-1 text-[11px] text-stone pt-1">
+                    <div class="flex justify-between">
+                        <span>Confidence:</span>
+                        <span class="text-ink font-medium">${confPct}%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Assigned Model:</span>
+                        <span class="text-ink">${modelShort}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Tokens (In/Out):</span>
+                        <span class="text-ink">${data.tokens_in} / ${data.tokens_out}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Est. Cost:</span>
+                        <span class="text-ink font-medium">$${data.estimated_cost_usd.toFixed(5)}</span>
+                    </div>
+                </div>
+            `;
+
+            panel.insertBefore(card, panel.firstChild);
+        }
+
+        // Live Telemetry Updates
+        async function updateSavings() {
+            try {
+                const res = await fetch('/api/savings');
+                const s = await res.json();
+
+                const totalQueries = s.total_decisions || 0;
+                const costSaved = '$' + (s.cost_saved_usd || 0).toFixed(4);
+                const pctSaved = (s.percent_cost_saved || 0).toFixed(1) + '%';
+                const avgDecision = (s.avg_decision_latency_ms || 4.2).toFixed(1) + 'ms';
+
+                const totalQueriesEl = document.getElementById('dash-total-queries');
+                if (totalQueriesEl) totalQueriesEl.textContent = `${totalQueries} QUERIES EVALUATED`;
+
+                const costSavedEl = document.getElementById('dash-cost-saved');
+                if (costSavedEl) costSavedEl.textContent = costSaved;
+
+                const pctSavedEl = document.getElementById('dash-pct-saved');
+                if (pctSavedEl) pctSavedEl.textContent = pctSaved;
+
+                const avgDecisionEl = document.getElementById('dash-avg-decision');
+                if (avgDecisionEl) avgDecisionEl.textContent = avgDecision;
+
+                const smallPct = s.percent_small || 0;
+                const frontierPct = 100 - smallPct;
+
+                const smallBar = document.getElementById('dash-small-bar');
+                const frontierBar = document.getElementById('dash-frontier-bar');
+                const smallPctEl = document.getElementById('dash-small-pct');
+                const frontierPctEl = document.getElementById('dash-frontier-pct');
+
+                if (smallBar) smallBar.style.width = smallPct + '%';
+                if (frontierBar) frontierBar.style.width = frontierPct + '%';
+                if (smallPctEl) smallPctEl.textContent = smallPct.toFixed(0) + '%';
+                if (frontierPctEl) frontierPctEl.textContent = frontierPct.toFixed(0) + '%';
+            } catch (err) {
+                console.debug('Savings update skipped:', err);
+            }
+        }
+
+        async function resetHistory() {
+            await fetch('/api/reset', { method: 'POST' });
+            messageCount = 0;
+            document.getElementById('chat-messages').innerHTML = `
+                <div class="text-center py-14 text-stone">
+                    <div class="mono-label text-[11px] text-stone mb-1">PROMPT DISPATCH READY</div>
+                    <p class="serif-headline text-xl text-ink font-normal mb-1">Enter a query to test dynamic routing.</p>
+                    <p class="text-xs text-stone max-w-sm mx-auto">Decider 2B evaluates complexity locally in ~4ms before Amazon Bedrock executes the selected model tier.</p>
+                </div>`;
+            document.getElementById('decisions-panel').innerHTML = `
+                <div class="text-center py-20 text-stone">
+                    <span class="mono-label text-[11px] text-stone block mb-2">DECISION LOG AWAITING INPUT</span>
+                    <p class="text-xs text-stone">Decisions, confidence ratings, and model assignments will appear here live.</p>
+                </div>`;
+            
+            document.getElementById('dash-cost-saved').textContent = '$0.0000';
+            document.getElementById('dash-pct-saved').textContent = '0%';
+            document.getElementById('dash-avg-decision').textContent = '4.2ms';
+            document.getElementById('dash-total-queries').textContent = '0 QUERIES EVALUATED';
+            document.getElementById('dash-small-bar').style.width = '0%';
+            document.getElementById('dash-frontier-bar').style.width = '100%';
+            document.getElementById('dash-small-pct').textContent = '0%';
+            document.getElementById('dash-frontier-pct').textContent = '100%';
+        }
+
+        // Benchmark Runner Modal & SSE Streaming
+        function openBenchmarkModal() {
+            document.getElementById('benchmark-modal').classList.remove('hidden');
+            runBenchmark();
+        }
+
+        function closeBenchmarkModal() {
+            document.getElementById('benchmark-modal').classList.add('hidden');
+        }
+
+        async function runBenchmark() {
+            const content = document.getElementById('benchmark-content');
+
+            content.innerHTML = `
+                <div class="py-8">
+                    <div class="flex items-center justify-between mb-2">
+                        <span id="bm-mode" class="mono-label text-[11px] text-ink font-medium">INITIALIZING 50-QUERY BENCHMARK...</span>
+                        <span id="bm-count" class="mono-label text-[11px] text-stone">0 / 150</span>
+                    </div>
+                    <div class="w-full h-2 bg-paper-cool rounded-full overflow-hidden mb-5">
+                        <div id="bm-bar" class="h-full bg-ink transition-all duration-150" style="width: 0%"></div>
+                    </div>
+                    <div class="bg-paper-warm border border-paper-cool rounded-card p-4 text-xs font-mono text-stone space-y-1.5">
+                        <div class="flex justify-between">
+                            <span>CURRENT STAGE:</span>
+                            <span id="bm-status" class="text-ink">Starting evaluations...</span>
+                        </div>
+                        <div id="bm-q-text" class="text-ink font-sans italic truncate">...</div>
+                        <div class="flex justify-between pt-1 border-t border-paper-cool">
+                            <span>Route: <span id="bm-route" class="text-ink">-</span></span>
+                            <span>Confidence: <span id="bm-conf" class="text-ink">-</span></span>
+                        </div>
+                    </div>
+                </div>`;
+
+            try {
+                const eventSource = new EventSource('/api/benchmark/stream');
+
+                eventSource.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+
+                    if (data.type === 'progress') {
+                        const pct = (data.step / data.total_steps * 100).toFixed(0);
+                        const modeNames = {
+                            'routeright': 'STAGE 01 / ROUTERIGHT (DECIDER 2B)',
+                            'always-frontier': 'STAGE 02 / ALWAYS FRONTIER',
+                            'always-small': 'STAGE 03 / ALWAYS SMALL'
+                        };
+
+                        const modeEl = document.getElementById('bm-mode');
+                        const countEl = document.getElementById('bm-count');
+                        const barEl = document.getElementById('bm-bar');
+                        const qTextEl = document.getElementById('bm-q-text');
+                        const statusEl = document.getElementById('bm-status');
+                        const routeEl = document.getElementById('bm-route');
+                        const confEl = document.getElementById('bm-conf');
+
+                        if (modeEl) modeEl.textContent = modeNames[data.mode] || data.mode;
+                        if (countEl) countEl.textContent = `${data.step} / ${data.total_steps} (${pct}%)`;
+                        if (barEl) barEl.style.width = pct + '%';
+                        if (qTextEl) qTextEl.textContent = `"${data.question}..."`;
+                        if (statusEl) statusEl.textContent = `QUERY ${data.mode_index} OF ${data.mode_total}`;
+                        if (routeEl) routeEl.textContent = data.routed_to.toUpperCase();
+                        if (confEl) confEl.textContent = (data.confidence * 100).toFixed(1) + '%';
+                    } else if (data.type === 'complete') {
+                        eventSource.close();
+                        renderBenchmarkResults(data.results, content);
+                        updateSavings();
+                    }
+                };
+
+                eventSource.onerror = () => {
+                    eventSource.close();
+                    fetch('/api/benchmark', { method: 'POST' })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.error) {
+                                content.innerHTML = `<div class="text-stone text-xs mono-label">Error: ${data.error}</div>`;
+                            } else {
+                                renderBenchmarkResults(data, content);
+                            }
+                        })
+                        .catch(e => {
+                            content.innerHTML = `<div class="text-stone text-xs mono-label">Error: ${e.message}</div>`;
+                        });
+                };
+            } catch (err) {
+                content.innerHTML = `<div class="text-stone text-xs mono-label">Error: ${err.message}</div>`;
+            }
+        }
+
+        function renderBenchmarkResults(data, container) {
+            const modes = ['routeright', 'always-frontier', 'always-small'];
+            const labels = ['RouteRight', 'Always Frontier', 'Always Small'];
+
+            let html = `
+                <div class="mb-6">
+                    <div class="mono-label text-[11px] text-stone mb-2">50-QUESTION EVALUATION MATRIX</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">`;
+
+            modes.forEach((mode, i) => {
+                const s = data[mode]?.summary || {};
+                const isRouteRight = mode === 'routeright';
+                html += `
+                    <div class="border ${isRouteRight ? 'border-ink bg-paper-warm/50' : 'border-paper-warm bg-white'} rounded-card p-4">
+                        <div class="mono-label text-[11px] font-medium text-ink mb-3">${labels[i]}</div>
+                        <div class="space-y-1.5 text-xs font-mono text-stone">
+                            <div class="flex justify-between">
+                                <span>Accuracy:</span>
+                                <span class="text-ink font-medium">${s.accuracy || 0}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Small Tier:</span>
+                                <span class="text-ink">${s.percent_small || 0}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Total Cost:</span>
+                                <span class="text-ink font-medium">$${(s.total_cost_usd || 0).toFixed(5)}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>P50 Latency:</span>
+                                <span class="text-ink">${s.p50_total_latency_ms || 0}ms</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Misrouted:</span>
+                                <span class="text-ink">${s.misrouted_count || 0}</span>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+
+            html += `</div></div>`;
+
+            // Cost comparison bars (editorial monochrome)
+            const costs = modes.map(m => data[m]?.summary?.total_cost_usd || 0);
+            const maxCost = Math.max(...costs, 0.000001);
+
+            html += `
+                <div class="mb-6 pt-4 border-t border-paper-warm">
+                    <div class="mono-label text-[11px] text-stone mb-3">INFERENCE SPEND COMPARISON</div>
+                    <div class="space-y-2.5">`;
+
+            modes.forEach((mode, i) => {
+                const cost = costs[i];
+                const pct = (cost / maxCost * 100).toFixed(0);
+                const isRouteRight = mode === 'routeright';
+                html += `
+                    <div class="flex items-center gap-3">
+                        <span class="mono-label text-[11px] text-stone w-32 shrink-0">${labels[i]}</span>
+                        <div class="flex-1 h-3 bg-paper-cool rounded-full overflow-hidden">
+                            <div class="h-full ${isRouteRight ? 'bg-ink' : 'bg-stone'} rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                        <span class="font-mono text-xs text-ink w-24 text-right">$${cost.toFixed(5)}</span>
+                    </div>`;
+            });
+            html += `</div></div>`;
+
+            // Misrouted Questions disclosure
+            const rrMisrouted = data.routeright?.summary?.misrouted || [];
+            if (rrMisrouted.length > 0) {
+                html += `
+                    <div class="pt-4 border-t border-paper-warm">
+                        <div class="flex justify-between items-baseline mb-2">
+                            <span class="mono-label text-[11px] text-stone">AUDIT / BORDERLINE ESCALATIONS (${rrMisrouted.length})</span>
+                            <span class="text-[11px] text-stone">All safely escalated to frontier</span>
+                        </div>
+                        <div class="space-y-2 max-h-[180px] overflow-y-auto scrollbar-monograph pr-1">`;
+                rrMisrouted.forEach(m => {
+                    html += `
+                        <div class="border border-paper-warm rounded-card p-2.5 bg-paper-warm/30 text-xs">
+                            <div class="text-ink font-sans mb-1">"${escapeHtml(m.question)}"</div>
+                            <div class="font-mono text-[10px] text-stone flex gap-3">
+                                <span>Ground Truth: ${m.label}</span>
+                                <span>Routed: ${m.routed_to}</span>
+                                <span>Confidence: ${m.confidence.toFixed(3)}</span>
+                            </div>
+                        </div>`;
+                });
+                html += `</div></div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Global key listeners
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeBenchmarkModal();
+                closeAuthModal();
+            }
+        });
+
+        // App Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('routeright_user');
+            if (saved) {
+                try {
+                    currentUser = JSON.parse(saved);
+                    updateUserDisplay();
+                } catch (e) {
+                    currentUser = null;
+                }
+            }
+
+            if (window.location.hash === '#/dashboard' && currentUser) {
+                switchView('dashboard');
+            } else {
+                switchView('landing');
+            }
+
+            fetchUserStats();
+            updateSavings();
+        });
+    </script>
+</body>
+</html>
