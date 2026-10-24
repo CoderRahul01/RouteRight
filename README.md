@@ -7,8 +7,14 @@ Tags: `#strands-decider-2b` `#model-routing`
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python: 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![Strands: Compatible](https://img.shields.io/badge/Strands-Agent-green.svg)](https://github.com/strands-agents)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-routeright--decider.vercel.app-purple)](https://routeright-decider.vercel.app)
 
 ---
+
+## Live Demo
+
+Experience RouteRight running live in your browser:
+**[https://routeright-decider.vercel.app](https://routeright-decider.vercel.app)**
 
 ## What is RouteRight?
 

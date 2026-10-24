@@ -1,0 +1,18 @@
+{
+  "name": "routeright",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/benchmark/cache",
+      "destination": "/api/benchmark/cache.js"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
