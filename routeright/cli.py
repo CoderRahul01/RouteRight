@@ -44,6 +44,10 @@ def cmd_start(args):
     print("=" * 60)
 
     # 1. Run diagnostic pre-flight
+    if getattr(args, "decision_only", False):
+        os.environ["ROUTERIGHT_DECISION_ONLY"] = "true"
+        print("Mode: Decision-Only (100% free, zero AWS Bedrock charges).")
+
     from scripts.check_setup import check_decider, check_pricing_file
     from routeright.config import RouterConfig
 
@@ -112,6 +116,7 @@ def main():
     # start
     start_parser = subparsers.add_parser("start", help="Start Decider and RouteRight Web Console")
     start_parser.add_argument("--no-browser", action="store_true", help="Do not open browser automatically")
+    start_parser.add_argument("--decision-only", action="store_true", help="Run 100% free Decision-Only mode without Bedrock calls")
 
     # check
     subparsers.add_parser("check", help="Run diagnostic health checks")
@@ -131,7 +136,7 @@ def main():
         cmd_benchmark(args)
     else:
         # Default action: start
-        cmd_start(argparse.Namespace(no_browser=False))
+        cmd_start(argparse.Namespace(no_browser=False, decision_only=False))
 
 
 if __name__ == "__main__":

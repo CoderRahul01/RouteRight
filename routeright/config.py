@@ -54,9 +54,12 @@ class RouterConfig:
         default_factory=lambda: float(os.getenv("ROUTERIGHT_DAILY_USD_CAP", "5.0"))
     )
 
-    # Mock mode
+    # Mock & Decision-Only modes
     mock_mode: bool = field(
         default_factory=lambda: os.getenv("ROUTERIGHT_MOCK_MODE", "false").lower() == "true"
+    )
+    decision_only: bool = field(
+        default_factory=lambda: os.getenv("ROUTERIGHT_DECISION_ONLY", "false").lower() == "true"
     )
 
     # Server

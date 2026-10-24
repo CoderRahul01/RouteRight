@@ -65,4 +65,20 @@ def test_status_endpoint(client):
     assert data["status"] == "online"
     assert "architecture" in data
     assert "is_simulated" in data
+    assert "decision_only" in data
     assert "decider_model" in data
+
+
+def test_decision_only_mode(client, monkeypatch):
+    from routeright import server
+    monkeypatch.setattr(server.config, "mock_mode", False)
+    monkeypatch.setattr(server.config, "decision_only", True)
+
+    res = client.post("/api/chat", json={"message": "Solve 2+2"})
+    assert res.status_code == 200
+    data = res.json()
+    assert "[Decision-Only Mode]" in data["response"]
+    assert "route" in data
+    assert "confidence" in data
+    assert data["is_simulated"] is False
+

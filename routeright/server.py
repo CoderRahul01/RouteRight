@@ -103,6 +103,7 @@ async def get_status():
     return {
         "status": "online",
         "is_simulated": bool(config.mock_mode),
+        "decision_only": bool(config.decision_only),
         "architecture": "Strands Decider 2B + Amazon Bedrock",
         "decider_model": config.decider_model_id,
         "decider_device": config.decider_device,
@@ -155,12 +156,20 @@ async def chat(req: ChatRequest, request: Request):
     current_spend = router.get_savings_summary().get("actual_cost_usd", 0.0)
     cap_reached = current_spend >= config.daily_usd_cap
 
-    # Run inference: either simulated, real Bedrock, or decision-only mode
+    # Run inference: either simulated, decision-only, or real Bedrock
     if config.mock_mode:
         inference = bedrock.invoke(model_id, req.message, config.max_tokens)
         response_text = inference.text
         tokens_in = inference.tokens_in
         tokens_out = inference.tokens_out
+    elif config.decision_only:
+        response_text = (
+            f"[Decision-Only Mode] RouteRight routed this prompt to '{decider_result.choice}' "
+            f"({model_id}) with {decider_result.confidence * 100:.1f}% confidence in "
+            f"{decider_result.latency_ms:.1f}ms. No Bedrock API call made ($0.00 spent)."
+        )
+        tokens_in = len(req.message) // 4
+        tokens_out = 35
     elif cap_reached:
         logger.warning("ROUTERIGHT_DAILY_USD_CAP ($%.2f) reached; disabling Bedrock calls.", config.daily_usd_cap)
         response_text = (
