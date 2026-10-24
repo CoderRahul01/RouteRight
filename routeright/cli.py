@@ -59,7 +59,7 @@ def cmd_start(args):
     if not decider_running and not config.mock_mode:
         print("\nStarting local Strands Decider 2B server on port 8001...")
         cmd = [
-            sys.executable, "-m", "strands_decider", "serve",
+            sys.executable, "-m", "strands_decider.cli", "serve",
             config.decider_model_id,
             "--port", "8001",
             "--host", "127.0.0.1",
